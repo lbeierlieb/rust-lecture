@@ -21,13 +21,14 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Build WASM package
+      - name: Build latex slides
         run: nix build .#slides
 
       - name: Prepare artifact for GitHub Pages
         run: |
           mkdir -p ./public
-          cp -r ./result/main.pdf ./public/
+          cp ./result/main.pdf ./public/lbeierlieb-rust-lecture.pdf
+          cp ./slide_deployment/index.html ./public/
 
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3

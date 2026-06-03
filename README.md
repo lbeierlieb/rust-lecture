@@ -5,6 +5,11 @@
 
 This repository contains the materials for the lecture "Memory-safe Programming: An Introduction to Rust", i.e., slides and exercises.
 
+## Lecture Slides
+
+The slides as PDF are available at [lbeierlieb.github.io/rust-lecture](https://lbeierlieb.github.io/rust-lecture).
+You can find the LaTeX sources under [slides](./slides/).
+
 ## Licensing
 
 The code examples in this repository are licensed under the MIT License.
