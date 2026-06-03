@@ -21,7 +21,7 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Build WASM package
+      - name: Build latex slides
         run: nix build .#slides
 
       - name: Prepare artifact for GitHub Pages
