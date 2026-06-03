@@ -38,9 +38,35 @@
           );
 
         week1 = buildCargoProject ./exercises/week1/zombiesim;
+
+        slides = pkgs.stdenv.mkDerivation {
+          pname = "rust-lecture-slides";
+          version = "0.1.0";
+
+          src = ./slides;
+
+          nativeBuildInputs = [ pkgs.texlive.combined.scheme-full ];
+
+          phases = [
+            "unpackPhase"
+            "buildPhase"
+            "installPhase"
+          ];
+
+          buildPhase = ''
+            latexmk -pdf main.tex
+          '';
+
+          installPhase = ''
+            mkdir $out
+            mv main.pdf $out/main.pdf
+          '';
+        };
       in
       {
-        packages.week1 = week1;
+        packages = {
+          inherit week1 slides;
+        };
 
         devShells.default = craneLib.devShell { };
       }
