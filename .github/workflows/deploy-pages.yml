@@ -27,7 +27,8 @@ jobs:
       - name: Prepare artifact for GitHub Pages
         run: |
           mkdir -p ./public
-          cp -r ./result/main.pdf ./public/
+          cp ./result/main.pdf ./public/lbeierlieb-rust-lecture.pdf
+          cp ./slide_deployment/index.html ./public/
 
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
