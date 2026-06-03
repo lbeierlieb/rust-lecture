@@ -68,7 +68,20 @@
           inherit week1 slides;
         };
 
-        devShells.default = craneLib.devShell { };
+        devShells = {
+          rust = craneLib.devShell { };
+          latex = pkgs.mkShell {
+            packages = [ pkgs.texlive.combined.scheme-full ];
+            shellHook = ''
+              echo "devshell for compiling latex slides"
+              echo "=========================="
+              echo "Helpful commands:"
+              echo "- build on file change: latexmk -pvc -pdf main.tex"
+              echo "- build once: latexmk -pdf main.tex"
+              echo "- cleanup: latexmk -C"
+            '';
+          };
+        };
       }
     );
 }
