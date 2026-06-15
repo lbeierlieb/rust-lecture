@@ -43,7 +43,7 @@
           pname = "rust-lecture-slides";
           version = "0.1.0";
 
-          src = ./slides;
+          src = "${self}/slides";
 
           nativeBuildInputs = [ pkgs.texlive.combined.scheme-full ];
 
