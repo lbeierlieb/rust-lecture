@@ -72,10 +72,22 @@
             mv main-animated.pdf $out/main-animated.pdf
           '';
         });
+        slides-all = pkgs.symlinkJoin {
+          name = "rust-lecture-slides-all";
+          paths = [
+            slides
+            slides-animated
+          ];
+        };
       in
       {
         packages = {
-          inherit week1 slides slides-animated;
+          inherit
+            week1
+            slides
+            slides-animated
+            slides-all
+            ;
         };
 
         devShells = {
