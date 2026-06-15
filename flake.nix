@@ -62,10 +62,32 @@
             mv main.pdf $out/main.pdf
           '';
         };
+        slides-animated = slides.overrideAttrs (oldAttrs: {
+          pname = "rust-lecture-slides-animated";
+          buildPhase = ''
+            latexmk -pdf main-animated.tex
+          '';
+          installPhase = ''
+            mkdir $out
+            mv main-animated.pdf $out/main-animated.pdf
+          '';
+        });
+        slides-all = pkgs.symlinkJoin {
+          name = "rust-lecture-slides-all";
+          paths = [
+            slides
+            slides-animated
+          ];
+        };
       in
       {
         packages = {
-          inherit week1 slides;
+          inherit
+            week1
+            slides
+            slides-animated
+            slides-all
+            ;
         };
 
         devShells = {
