@@ -22,12 +22,13 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Build latex slides
-        run: nix build .#slides
+        run: nix build .#slides-all
 
       - name: Prepare artifact for GitHub Pages
         run: |
           mkdir -p ./public
-          cp ./result/main.pdf ./public/lbeierlieb-rust-lecture.pdf
+          cp -L ./result/main.pdf ./public/lbeierlieb-rust-lecture.pdf
+          cp -L ./result/main-animated.pdf ./public/lbeierlieb-rust-lecture-animated.pdf
           cp ./slide_deployment/index.html ./public/
 
       - name: Upload artifact
