@@ -1,0 +1,764 @@
+
+
+\usepackage{minted} % code listings
+
+\title{Memory-safe Programming: An Introduction to Rust}
+\subtitle{Rust at the University of Bamberg}
+\author{Lukas Beierlieb M.Sc.}
+\date{Summer Term 2026}
+
+\begin{document}
+
+\frame[plain]{\titlepage}
+
+\begin{frame}[fragile]
+    \frametitle{Copyright / Acknowledgements}
+
+\end{frame}
+
+\begin{frame}{Why Rust?}
+    This is a slide.
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Hello World!}
+    \begin{minted}[linenos]{rust}
+fn main() {
+    println!("Hello world");
+}
+    \end{minted}
+
+    \pause
+
+    Already in this tiny example:
+    \begin{itemize}
+        \pause
+        \item Function definition (covering very soon)
+        \item Rust program entry point
+        \pause
+        \item Declarative Macro
+        \pause
+        \item Unsized types
+        \item References
+        \item Lifetimes
+    \end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Primitive Data Types}
+    \begin{itemize}
+        \item unsigned integer: \texttt{u8}, \texttt{u16}, \texttt{u32}, \texttt{u64}
+        \item signed integer: \texttt{i8}, \texttt{i16}, \texttt{i32}, \texttt{i64}
+        \item integers with architecture-dependent size: \texttt{usize}, \texttt{isize} (e.g., size of 64 bits on a 64-bit CPU)
+        \pause
+        \item floating point number: \texttt{f32}, \texttt{f64}
+        \item \texttt{bool} with the values \texttt{true} and \texttt{false}
+        \item \texttt{char}, which is 32 bits in size to contain Unicode characters
+    \end{itemize}
+    \pause
+    Examples on the following slides!
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Creating Bindings with \texttt{let}}
+    \begin{itemize}
+        \item Informally called ``variables''
+        \item Bind a value to a name
+    \end{itemize}
+    \pause
+    \begin{minted}[linenos]{rust}
+fn main() {
+    let letter: char = 'a';
+    let emoji: char = '\u{1F980}'
+}
+    \end{minted}
+    \pause
+    The compiler can often perform type inference.
+    \pause
+    \begin{minted}[linenos]{rust}
+fn main() {
+    let letter = 'a';
+    let emoji = '\u{1F980}'
+}
+    \end{minted}
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Mutating Bindings}
+    \begin{minted}[linenos]{rust}
+fn main() {
+    let letter = 'a';
+    letter = 'b';
+}
+    \end{minted}
+    \pause
+    Compiler error:
+    \begin{minted}{text}
+error[E0384]: cannot assign twice to immutable variable `letter`
+ --> src/main.rs:3:5
+  |
+2 |     let letter = 'a';
+  |         ------ first assignment to `letter`
+3 |     letter = 'b';
+  |     ^^^^^^^^^^^^ cannot assign twice to immutable variable
+    \end{minted}
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Binding Shadowing}
+    \begin{minted}[linenos]{rust}
+fn main() {
+    let letter = 'a';
+    let letter = 'b';
+}
+    \end{minted}
+    \pause
+    A binding shadows previous bindings of the same name.
+    \pause
+    \begin{minted}[linenos]{rust}
+fn main() {
+    let value = 'a';
+    let value = true;
+}
+    \end{minted}
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Floating-point Numbers}
+    \begin{minted}[linenos]{rust}
+fn main() {
+    let pi: f64 = 3.14159;
+    let g: f32 = 9.81;
+    let three: f64 = 3.;
+}
+    \end{minted}
+    \pause
+    You can omit the zero following the decimal point but not the decimal point.
+    \pause
+    \begin{minted}[linenos]{rust}
+fn main() {
+    let three: f64 = 3;  // will not compile
+}
+    \end{minted}
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Floating-point Numbers}
+    If type inference cannot distinguish between \texttt{f32} and \texttt{f64}, the compiler defaults to \texttt{f64}.
+    \pause
+    \begin{minted}[linenos]{rust}
+fn main() {
+    let pi = 3.14159;  // pi's type is f64
+}
+    \end{minted}
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Unsigned Integers}
+    \begin{minted}[linenos]{rust}
+fn main() {
+    let max_u8: u8 = 255;
+    let max_u16: u16 = 65535;
+    let max_u32: u32 = 4294967295;
+    let max_u64: u64 = 18446744073709551615;
+    let max_usize: usize = 18446744073709551615;  // on 64-bit platforms
+}
+    \end{minted}
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Signed Integers}
+    \begin{minted}[linenos]{rust}
+fn main() {
+    let min_i8: i8 = -128;
+    let min_i16: i16 = -32768;
+    let min_i32: i32 = -2147483648;
+    let min_i64: i64 = -9223372036854775808;
+    let min_isize: isize = -9223372036854775808;  // on 64-bit platforms
+}
+    \end{minted}
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Integer Type Inference}
+    If type inference cannot distinguish between integer types, the compiler defaults to \texttt{i32}.
+    \pause
+    \begin{minted}[linenos]{rust}
+fn main() {
+    let integer = 3;  // integer's type is i32
+}
+    \end{minted}
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Printing Values}
+    We accept the functionality of the \texttt{println!} macro without looking deeper.
+    \pause
+    \begin{minted}[linenos]{rust}
+fn main() {
+    let integer = 3;
+    let pi = 3.14;
+
+    println!("The values are {}, {}, {}, {}", integer, pi, false, 'a');
+}
+    \end{minted}
+    \pause
+    Output:
+    \begin{minted}{text}
+The values are 3, 3.14, false, a
+    \end{minted}
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Printing Values}
+    Bindings can be included in the format string directly.
+    \begin{minted}[linenos]{rust}
+fn main() {
+    let integer = 3;
+    let pi = 3.14;
+
+    println!("The values are {integer}, {pi}, {}, {}", false, 'a');
+}
+    \end{minted}
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Blocks}
+    Blocks are not regularly used on their own, but they are crucial for many other language constructs.
+
+    \pause
+    \begin{minted}[linenos]{rust}
+fn main() {
+    let x = 3;
+    {
+        let x = {};
+    }
+    println!("{x}");
+}
+    \end{minted}
+    All \texttt{\{\ldots\}} (except \texttt{\{x\}} inside the string) are blocks.
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Blocks}
+    \begin{minted}[linenos]{rust}
+fn main() {
+    let x = 3;
+    {
+        let x = 5;
+        println!("x = {x}");
+    }
+    println!("x = {x}");
+}
+    \end{minted}
+    \pause
+    Output:
+    \begin{minted}{text}
+x = 5
+x = 3
+    \end{minted}
+    \pause
+    \begin{itemize}
+        \item Bindings go out of scope at the end of the block they are declared in.
+        \item Shadowed bindings can become available again.
+    \end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Blocks}
+    \begin{minted}[linenos]{rust}
+fn main() {
+    let x = {
+        println!("print in the block");
+        3
+    };
+    println!("x = {x}");
+}
+    \end{minted}
+    \pause
+    Output:
+    \begin{minted}{text}
+print in the block
+x = 3
+    \end{minted}
+    \pause
+    If a block ends with an expression, it evaluates to this expression.
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Blocks}
+    \begin{minted}[linenos]{rust}
+fn main() {
+    let x = {
+        let x = 3;
+    };
+    println!("x = {x}");
+}
+    \end{minted}
+    \pause
+    Compiler error:
+    \begin{minted}{text}
+error[E0277]: `()` doesn't implement `std::fmt::Display`
+ --> src/main.rs:5:19
+  |
+5 |     println!("x = {x}");
+  |                   ^^^ `()` cannot be formatted with...
+    \end{minted}
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Blocks}
+    \begin{minted}[linenos]{rust}
+fn main() {
+    let x = {
+        let x = 3;
+    };
+    println!("x = {x}");
+}
+    \end{minted}
+    \pause
+    \begin{itemize}
+        \item Line 3 is a statement, not an expression.
+        \item The inner block defaults to returning to \texttt{()}.
+        \item \texttt{println!} cannot directly print this value.
+    \end{itemize}
+\end{frame}
+
+
+\begin{frame}[fragile]
+    \frametitle{The \textit{unit} Type}
+    The \textit{unit} type \texttt{()} has a single value \texttt{()}.
+    \begin{minted}[linenos]{rust}
+fn main() {
+    let unit: () = ();
+    let unit = ();  // type inference also works for this type
+}
+    \end{minted}
+    \pause
+    \begin{itemize}
+        \item The type occurs often implicitly.
+        \item Explicit uses of \texttt{()} exist.
+    \end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Blocks}
+    More examples for block evaluation:
+    \begin{minted}[linenos]{rust}
+fn main() {
+    let a: () = {};  // empty block -> no expression -> evaluates to ()
+    let b: () = {
+        let x = 3;
+    };  // let binding is a statement -> no expr. -> eval to ()
+    let c: () = {
+        3;
+    };  // expression followed by semicolon is also a statement -> ()
+    let d: usize = {
+        3
+    };  // block contains only expression -> eval to 3
+    ...
+    \end{minted}
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Blocks}
+    \begin{minted}[linenos,firstnumber=11]{rust}
+    ...
+    let e: usize = {
+        let x = 3;
+        println!("x = {x}");
+        x
+    };  // block has statements and an expr. at end -> eval to 3
+}
+    \end{minted}
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Blocks}
+    We have observed block examples such as:
+    \begin{minted}[linenos]{rust}
+fn main() {
+    {
+        3
+    }
+    let a = {};
+}
+    \end{minted}
+    \pause
+    When is a \texttt{;} required after a block?
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Blocks}
+    \texttt{let} statements always have to end with a semicolon.
+    \begin{minted}[linenos]{rust}
+fn main() {
+    let a = {};
+    let b = {
+        let x = 3;
+        x
+    };
+}
+    \end{minted}
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Blocks}
+    Usually, expressions cannot exist between statements.
+    \pause
+    \begin{minted}[linenos]{rust}
+fn main() {
+    let a = 3;
+    a;  // valid: expression with semicolon is a statement
+    a   // invalid: standalone expression followed by something else
+    let b = 3;
+}
+    \end{minted}
+    \pause
+    Probably for parsing reasons.
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Blocks}
+    Blocks are also expressions, but they do not require a semicolon.
+    \pause
+    \begin{minted}[linenos]{rust}
+fn main() {
+    let a = 3;
+    { a }  // block is an expression and evaluates to 3 but needs no ;
+    { a };  // semicolon is allowed
+    { a };;;  // actually, you can always place additional semicolons
+    let b = 3;
+}
+    \end{minted}
+    \pause
+    Probably for parsing reasons.
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{\texttt{if} Expressions}
+    \begin{minted}[linenos]{rust}
+fn main() {
+    let condition1 = false;
+    let condition2 = true;
+
+    if condition1 {
+        println!("First condition was true");
+    } else if condition2 {
+        println!("First condition false, second condition true");
+    } else {
+        println!("Both conditions were false");
+    }
+}
+    \end{minted}
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{\texttt{if} Expressions}
+    \begin{itemize}
+        \item A condition must be an expression evaluating to a \texttt{bool}.
+        \item Parentheses around conditions are not necessary.
+        \pause
+        \vspace{.5cm}
+        \item \texttt{if} is an expression---it evaluates to the block of the chosen branch.
+    \end{itemize}
+    \pause
+    \begin{minted}[linenos]{rust}
+fn main() {
+    let a = if true {
+        3
+    } else {
+        5
+    }
+}
+    \end{minted}
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{\texttt{if} Expressions}
+    \begin{minted}[linenos]{rust}
+fn main() {
+    let a = if true {
+        3
+    } else {
+        'a'
+    };
+    println!("{}", a);
+}
+    \end{minted}
+    \pause
+    Compiler error:
+    \begin{minted}{text}
+error[E0308]: `if` and `else` have incompatible types
+    \end{minted}
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{\texttt{if} Expressions}
+    Full compiler error:
+    \begin{minted}{text}
+error[E0308]: `if` and `else` have incompatible types
+ --> src/main.rs:5:9
+  |
+2 |       let a = if true {
+  |  _____________-
+3 | |         3
+  | |         - expected because of this
+4 | |     } else {
+5 | |         'a'
+  | |         ^^^ expected integer, found `char`
+6 | |     };
+  | |_____- `if` and `else` have incompatible types
+    \end{minted}
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{\texttt{if} Expressions}
+    \begin{minted}[linenos]{rust}
+fn main() {
+    if true {
+        3
+    } else {
+        'a'
+    }
+    println!("hello");
+}
+    \end{minted}
+    \pause
+    Same compiler error.
+    \pause
+    \begin{itemize}
+        \item Even if the value is not used, its type must be fixed.
+        \pause
+        \item As with blocks, a semicolon is not necessary.
+    \end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{\texttt{if} Expressions}
+    Rust does not have the ternary operator (\texttt{?:}), but because \texttt{if} is an expression, you can use it similarly.
+    \pause
+    \begin{minted}[linenos]{rust}
+fn main() {
+    println!("{}", if true { 1 } else { 0 });
+}
+    \end{minted}
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{\texttt{if} Expressions}
+    \begin{itemize}
+        \item \texttt{if} without \texttt{else}: The block must evaluate to \texttt{()}.
+        \pause
+        \item The following expressions are equivalent.
+    \end{itemize}
+    \begin{minted}[linenos]{rust}
+fn main() {
+    if true { 3 }
+    if true { 3 } else {}
+    if true { 3 } else { () }
+}
+    \end{minted}
+    \pause
+    Compiler error (for Line 2):
+    \begin{minted}{text}
+2 |     if true { 3 }
+  |     ----------^--
+  |     |         |
+  |     |         expected `()`, found integer
+  |     `if` expr. without `else` arms expect their inner expr. to be `()`
+    \end{minted}
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Functions}
+    We have seen a function definition in every example.
+    \pause
+    \begin{minted}[linenos]{rust}
+fn main() {
+    println!("Hello world");
+}
+    \end{minted}
+    \pause
+    This example demonstrates:
+    \begin{itemize}
+        \item \texttt{fn} keyword indicates the definition of a named function
+        \item A function needs to specify to block.
+    \end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Functions}
+    \begin{minted}[linenos]{rust}
+fn pi() -> f64 {
+    if true {
+        println!("Returning pi");
+    } else {
+        return 0.;
+    }
+
+    3.14159
+}
+    \end{minted}
+    \pause
+    \begin{itemize}
+        \item Functions always return a value.
+        \item You must state the type of the return value after \texttt{->}.
+        \pause
+        \item The function typically evaluates to value of the block.
+        \item Early return with \texttt{return} is possible.
+    \end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Functions}
+    
+    \begin{itemize}
+        \item Functions \textbf{always} return a value.
+        \item The following function definitions are equivalent.
+    \end{itemize}
+    \pause
+    \begin{minted}[linenos]{rust}
+fn main() {}
+
+fn main() -> () {}
+
+fn main() -> () {
+    ()
+}
+    \end{minted}
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Functions}
+    
+    \begin{minted}[linenos]{rust}
+fn do_nothing() {}
+fn main() {
+    let a = do_nothing();
+}
+    \end{minted}
+    \pause
+    is equivalent to:
+    \begin{minted}[linenos]{rust}
+fn do_nothing() {}
+fn main() {
+    let a: () = do_nothing();
+}
+    \end{minted}
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Functions}
+    \begin{minted}[linenos]{rust}
+fn first_or_second(return_fst: bool, fst: usize, snd: usize) -> usize {
+    if return_fst {
+        fst
+    } else {
+        snd
+    }
+}
+    \end{minted}
+    \pause
+    \begin{itemize}
+        \item Functions specify zero or more arguments.
+        \item Type declarations of arguments are mandatory.
+        \item Each argument is a binding available in the function's block.
+    \end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Functions}
+    \begin{minted}[linenos]{rust}
+fn some_function(a: usize) -> usize {
+    a = 5;
+
+    a
+}
+    \end{minted}
+    \pause
+    Compiler error:
+    \begin{minted}{text}
+error[E0384]: cannot assign to immutable argument `a`
+ --> src/lib.rs:2:5
+  |
+2 |     a = 5;
+  |     ^^^^^ cannot assign to immutable argument
+    \end{minted}
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Functions}
+    \begin{minted}[linenos]{rust}
+fn some_function(mut a: usize) -> usize {
+    a = 5;
+
+    a
+}
+    \end{minted}
+    \pause
+    \begin{minted}[linenos]{rust}
+fn main() {
+    let value = 10;
+    some_function(value);
+    println!("{value}");
+}
+    \end{minted}
+    Output:
+    \pause
+    \begin{minted}{text}
+10
+    \end{minted}
+    \pause
+    \texttt{value} is not defined as mut, the compiler guarantees non-mutability.
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Tuples}
+    \begin{itemize}
+        \item We now look into more complex types.
+        \item A tuple is a fixed-size list of hetergenoeous values.
+    \end{itemize}
+    \pause
+    \begin{minted}[linenos]{rust}
+fn main() {
+    let a: (u64, char, f32) = (32, 'f', 12.47);
+    let b = (13, true, 15);  // type inference works for tuples
+    let c: u32 = (5);  // (5) is not a tuple
+    let d: (u32,) = (5,);  // one-sized tuples look a bit odd
+    let e = ();  // the unit type is just a zero-sized tuple!
+}
+    \end{minted}
+    \pause
+    Tuples are convenient to return multiple values from a function.
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Tuples}
+    You can access fields through ``tuple indexing''.   
+    \pause
+    \begin{minted}[linenos]{rust}
+fn main() {
+    let a: (u64, char, f32) = (32, 'f', 12.47);
+
+    let num = a.0;
+    let letter = a.1;
+    let float = a.2;
+}
+    \end{minted}
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Tuples}
+    Alternatively, you can destructure a tuple.   
+    \pause
+    \begin{minted}[linenos]{rust}
+fn main() {
+    let a: (u64, char, f32) = (32, 'f', 12.47);
+
+    let (num, letter, float) = a;
+}
+    \end{minted}
+\end{frame}
+
+\end{document}
