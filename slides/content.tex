@@ -335,7 +335,7 @@ x = 3
 fn main() {
     let x = {
         println!("print in the block");
-        3
+        3 + 5
     };
     println!("x = {x}");
 }
@@ -344,7 +344,7 @@ fn main() {
     Output:
     \begin{minted}{text}
 print in the block
-x = 3
+x = 8
     \end{minted}
     \pause
     If a block ends with an expression, it evaluates to this expression.
@@ -461,7 +461,8 @@ fn main() {
     let a = {};
     let b = {
         let x = 3;
-        x
+        let y = 8;
+        x + y
     };
 }
     \end{minted}
@@ -504,15 +505,14 @@ fn main() {
     \frametitle{\texttt{if} Expressions}
     \begin{minted}[linenos]{rust}
 fn main() {
-    let condition1 = false;
-    let condition2 = true;
+    let age: u8 = 23;
 
-    if condition1 {
-        println!("First condition was true");
-    } else if condition2 {
-        println!("First condition false, second condition true");
+    if age >= 18 {
+        println!("Adult!");
+    } else if age >= 10 {
+        println!("Teenager!");
     } else {
-        println!("Both conditions were false");
+        println!("Child!");
     }
 }
     \end{minted}
@@ -530,10 +530,13 @@ fn main() {
     \pause
     \begin{minted}[linenos]{rust}
 fn main() {
-    let a = if true {
-        3
+    let a = 3;
+    let b = 5;
+    
+    let max = if a > b {
+        a
     } else {
-        5
+        b
     }
 }
     \end{minted}
@@ -656,11 +659,7 @@ fn main() {
     \frametitle{Functions}
     \begin{minted}[linenos]{rust}
 fn pi() -> f64 {
-    if true {
-        println!("Returning pi");
-    } else {
-        return 0.;
-    }
+    println!("Returning pi");
 
     3.14159
 }
@@ -782,7 +781,7 @@ fn main() {
     \frametitle{Tuples}
     \begin{itemize}
         \item We now look into more complex types.
-        \item A tuple is a fixed-size list of hetergenoeous values.
+        \item A tuple is a fixed-size list of heterogenoeous values.
     \end{itemize}
     \pause
     \begin{minted}[linenos]{rust}
