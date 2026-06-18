@@ -180,6 +180,18 @@ fn main() {
 \end{frame}
 
 \begin{frame}[fragile]
+    \frametitle{Alternative Integer Representations}
+    \begin{minted}[linenos]{rust}
+fn main() {
+    let decimal = 123;
+    let hexadecimal = 0xff00;
+    let octal = 0o1277;
+    let binary = 0b1101011;
+}
+    \end{minted}
+\end{frame}
+
+\begin{frame}[fragile]
     \frametitle{Integer Type Inference}
     If type inference cannot distinguish between integer types, the compiler defaults to \texttt{i32}.
     \pause
