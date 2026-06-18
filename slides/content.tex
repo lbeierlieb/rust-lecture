@@ -235,6 +235,59 @@ fn main() {
 \end{frame}
 
 \begin{frame}[fragile]
+    \frametitle{Arithmetic Operators}
+    \begin{minted}[linenos]{rust}
+fn main() {
+    let add = 3 + 4;
+    let subtract = 10 - 5;
+    let multiply = 2 * 7;
+    let divide = 20 / 5;
+}
+    \end{minted}
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Logical Operators}
+    \begin{minted}[linenos]{rust}
+fn main() {
+    let and = true && false;
+    let or = false || true;
+    let not = !true;
+}
+    \end{minted}
+    \pause
+    \texttt{\&\&} and \texttt{||} use short-circuit evaluation.
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Comparison Operators}
+    \begin{minted}[linenos]{rust}
+fn main() {
+    let equal = 3 == 4;
+    let not_equal = 5 != 7;
+    let less_than = 10 < 100;
+    let greater_than = 12 > 1;
+    let less_or_equal = 11 <= 11;
+    let greater_or_equal = 5 >= 30;
+}
+    \end{minted}
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Bitwise Operators}
+    \begin{minted}[linenos]{rust}
+fn main() {
+    let and = 0xff & 0x7f00;
+    let or = 0xffff | 0x100;
+    let xor = 0x77 ^ 0x94;
+    let not = !0xf;
+    let shift_left = 0b101 << 2;
+    let shift_right = 0b1000 >> 3;
+}
+    \end{minted}
+\end{frame}
+
+\begin{frame}[fragile]
     \frametitle{Blocks}
     Blocks are not regularly used on their own, but they are crucial for many other language constructs.
 
