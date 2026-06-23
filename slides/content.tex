@@ -1,6 +1,15 @@
 
 
 \usepackage{minted} % code listings
+\usepackage{hyperref} % hyperlinks
+\hypersetup{
+    colorlinks=true,
+    linkcolor=blue,
+    urlcolor=cyan,
+    filecolor=magenta,
+    citecolor=green,
+    pdfborder={0 0 0}
+}
 
 \title{Memory-safe Programming: An Introduction to Rust}
 \subtitle{Rust at the University of Bamberg}
@@ -941,7 +950,7 @@ fn main() {
 
 \begin{frame}[fragile]
     \frametitle{Tuples}
-    Alternatively, you can destructure a tuple.   
+    Alternatively, you can destructure a tuple.
     \pause
     \begin{minted}[linenos]{rust}
 fn main() {
@@ -949,6 +958,51 @@ fn main() {
 
     let (num, letter, float) = a;
 }
+    \end{minted}
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Advanced Printing}
+    \begin{itemize}
+        \item Tuples have no default formatter (we noticed already when trying to print the unit value).
+        \item Tuples support debug formatting.
+    \end{itemize}
+    \pause
+    \begin{minted}[linenos]{rust}
+fn main() {
+    println!("{:?}", ());
+    
+    let a = (32, 'f', 12.47);
+    println!("{a:?}")
+}
+    \end{minted}
+    Output:
+    \begin{minted}{text}
+()
+(32, 'f', 12.47)
+    \end{minted}
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Advanced Printing}
+    \begin{itemize}
+        \item The \texttt{:} specifies that formatting options follow.
+        \item The \texttt{?} specifies debug formatting.
+        \item There are a lot more formatting options (\href{https://doc.rust-lang.org/std/fmt/}{fmt documentation}).
+    \end{itemize}
+    \pause
+    \begin{minted}[linenos]{rust}
+fn main() {
+    println!("{:.2}", 3.14159);  // float precision
+    println!("{:b}", 66);  // binary
+    println!("{:x}", 254);  // hexadecimal
+}
+    \end{minted}
+    Output:
+    \begin{minted}{text}
+3.14
+1000010
+fe
     \end{minted}
 \end{frame}
 
