@@ -639,6 +639,134 @@ fn main() {
 \end{frame}
 
 \begin{frame}[fragile]
+    \frametitle{\texttt{loop} Expressions}
+    \begin{minted}[linenos]{rust}
+fn main() {
+    let mut counter: u64 = 0;
+    loop {
+        println!("loop iteration {counter}");
+        counter += 1;
+    }
+}
+    \end{minted}
+    \pause
+    \texttt{loop} will not stop!
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{\texttt{loop} Expressions}
+    \begin{minted}[linenos]{rust}
+fn main() {
+    let mut counter: u64 = 0;
+    loop {
+        counter += 1;
+
+        if counter == 100 {
+            break;
+        }
+    }
+}
+    \end{minted}
+    \pause
+    \texttt{loop} will not stop!
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{\texttt{loop} Expressions}
+    \texttt{loop} is an expression!
+    \pause
+    \begin{minted}[linenos]{rust}
+fn main() {
+    let mut counter: u64 = 0;
+    let val: () = loop {
+        counter += 1;
+
+        if counter == 100 {
+            break;
+        }
+    };
+}
+    \end{minted}
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{\texttt{loop} Expressions}
+    \texttt{break;} is equivalent to \texttt{break ();}.
+    \pause
+    \begin{minted}[linenos]{rust}
+fn main() {
+    let mut counter: u64 = 0;
+    let val: () = loop {
+        counter += 1;
+
+        if counter == 100 {
+            break ();
+        }
+    };
+}
+    \end{minted}
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{\texttt{loop} Expressions}
+    The same way, \texttt{break} can return values of all types.
+    \pause
+    \begin{minted}[linenos]{rust}
+fn main() {
+    let mut counter: u64 = 0;
+    let mut cumulative_sum = 0;
+    let result = loop {
+        cumulative_sum += counter;
+        counter += 1;
+
+        if counter == 100 {
+            break cumulative_sum;
+        }
+    };
+}
+    \end{minted}
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{\texttt{while} Expressions}
+    The \texttt{loop} examples looked like \texttt{while} loops with extra steps.
+    \pause
+    \begin{minted}[linenos]{rust}
+fn main() {
+    let mut counter: u64 = 0;
+    let mut cumulative_sum = 0;
+    while counter < 100 {
+        cumulative_sum += counter;
+        counter += 1;
+    }
+}
+    \end{minted}
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{\texttt{while} Expressions}
+    \texttt{break;} also works inside of \texttt{while}.
+    \pause
+    \begin{minted}[linenos]{rust}
+fn main() {
+    let mut counter: u64 = 0;
+    while counter < 100 {
+        counter += 1;
+
+        if counter == 10 {
+            break;   // return early
+        }
+    }
+}
+    \end{minted}
+    \pause
+    \begin{itemize}
+        \item But \texttt{break} cannot return a value in \texttt{while}.
+        \item \texttt{while} expression always return \texttt{()}.
+    \end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
     \frametitle{Functions}
     We have seen a function definition in every example.
     \pause
@@ -756,7 +884,6 @@ error[E0384]: cannot assign to immutable argument `a`
     \begin{minted}[linenos]{rust}
 fn some_function(mut a: usize) -> usize {
     a = 5;
-
     a
 }
     \end{minted}
