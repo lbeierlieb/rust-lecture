@@ -993,7 +993,7 @@ fn main() {
     \pause
     \begin{minted}[linenos]{rust}
 fn main() {
-    println!("{:.2}", 3.14159);  // float precision
+    println!("{:.2}", 3.14159);  // precision of floats
     println!("{:b}", 66);  // binary
     println!("{:x}", 254);  // hexadecimal
 }
@@ -1005,5 +1005,119 @@ fn main() {
 fe
     \end{minted}
 \end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Arrays}
+    \begin{minted}[linenos]{rust}
+fn main() {
+    let integer_array: [i32; 4] = [-23, 492, 8001, -3];
+    let boolean_array = [true, false, false ];  // type inference works
+    let tuple_array: [(u64, f64); 2] = [(0, 0.0), (1, 1.0)];
+}
+    \end{minted}
+    \pause
+    \begin{itemize}
+        \item The size is part of an array's type.
+        \item \texttt{[i32; 4]} is a different type than \texttt{[i32; 5]}.
+        \pause
+        \item The compiler needs to know the size at compile time.
+    \end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Arrays}
+    The \textit{repeat expression} allows easy initialization of large arrays.
+    \pause
+    \begin{minted}[linenos]{rust}
+fn main() {
+    let integer_array: [f64; 1024] = [0.0; 1024];
+    let bool_array: [bool; 1000000] = [true; 1000000];
+    let array_array: [[i32; 30]; 500] = [[0; 30]; 500];
+}
+    \end{minted}
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Arrays}
+    \begin{itemize}
+        \item The \texttt{[]} operator allows index-based access to array elements.
+        \item The index must be of type \texttt{usize}.
+    \end{itemize}
+    \pause
+    \begin{minted}[linenos]{rust}
+fn main() {
+    let array = ['a'; 100];
+
+    println!("{}", array[25]);
+}
+    \end{minted}
+    \pause
+    \begin{itemize}
+        \item Out-of-bounds accesses are not memory safe.
+        \item The compiler checks indices either at compile time or inserts runtime checks.
+    \end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Arrays}
+    \begin{itemize}
+        \item Arrays do not have a default formatter.
+        \item Debug formatter works.
+    \end{itemize}
+    \pause
+    \begin{minted}[linenos]{rust}
+fn main() {
+    let integer_array: [i32; 4] = [-23, 492, 8001, -3];
+
+    println!("{integer_array:?}");
+    println!("{} {}", [4.2, 3.96], [false; 5]);
+}
+    \end{minted}
+    \pause
+    Output:
+    \begin{minted}{text}
+[-23, 492, 8001, -3]
+[4.2, 3.96] [false, false, false, false, false]
+    \end{minted}
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Examples: Arrays, Tuples, Functions, \texttt{while}}
+    \begin{minted}[linenos]{rust}
+fn min_and_max(array: [u64; 10]) -> (u64, u64) {
+    let mut min = u64::MIN;
+    let mut max = u64::MAX;
+    let mut i = 0;
+    while i < 10 {
+        let val = array[i];
+        if val < min {
+            min = val;
+        }
+        if val > max {
+            max = val;
+        }
+        i += 1;
+    }
+    (min, max)
+}
+    \end{minted}
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Examples: Arrays, Tuples, Functions, \texttt{while}}
+    \begin{minted}[linenos]{rust}
+fn all(array: [bool; 10]) -> bool {
+    let mut i = 0;
+    while i < 10 {
+        if !array[i] {
+            return false;
+        }
+        i += 1;
+    }
+    true
+}
+    \end{minted}
+\end{frame}
+
 
 \end{document}
