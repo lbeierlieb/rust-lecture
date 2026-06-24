@@ -1,6 +1,43 @@
+\usetheme{CambridgeUS}
 
+\definecolor{rustorange}{RGB}{183,65,14}
+\setbeamercolor{structure}{fg=rustorange}
+\setbeamercolor{palette primary}{bg=rustorange,fg=white}
+\setbeamercolor{palette secondary}{bg=rustorange!80!black,fg=white}
+\setbeamercolor{palette tertiary}{bg=rustorange!60!black,fg=white}
+\setbeamercolor{palette quaternary}{bg=rustorange!40!black,fg=white}
+\setbeamercolor{title}{fg=rustorange}
+\setbeamercolor{frametitle}{fg=rustorange}
+\setbeamercolor{item}{fg=rustorange}
+\setbeamercolor{section in head/foot}{bg=rustorange,fg=white}
+\setbeamercolor{author in head/foot}{fg=black,bg=rustorange}
+\setbeamercolor{title in head/foot}{fg=black,bg=rustorange!85!black}
+\setbeamercolor{date in head/foot}{fg=black,bg=rustorange}
+\setbeamercolor{pagenumber in head/foot}{fg=black,bg=rustorange!85!black}
+
+\setbeamertemplate{footline}{
+  \leavevmode%
+  \hbox{%
+  \begin{beamercolorbox}[wd=.3\paperwidth,ht=2.5ex,dp=1.5ex,left]{author in head/foot}%
+    \hspace*{2ex}\insertshortauthor
+  \end{beamercolorbox}%
+  \begin{beamercolorbox}[wd=.4\paperwidth,ht=2.5ex,dp=1.5ex,center]{title in head/foot}%
+    \begingroup
+    \hypersetup{linkcolor=black}%
+    \insertshorttitle
+    \endgroup
+  \end{beamercolorbox}%
+  \begin{beamercolorbox}[wd=.2\paperwidth,ht=2.5ex,dp=1.5ex,center]{date in head/foot}%
+    \insertshortdate
+  \end{beamercolorbox}%
+  \begin{beamercolorbox}[wd=.1\paperwidth,ht=2.5ex,dp=1.5ex,right]{pagenumber in head/foot}%
+    \insertframenumber{} / \inserttotalframenumber\hspace*{2ex}
+  \end{beamercolorbox}}%
+}
 
 \usepackage{minted} % code listings
+\setminted{xleftmargin=1.5em}
+
 \usepackage{hyperref} % hyperlinks
 \hypersetup{
     colorlinks=true,
@@ -36,9 +73,8 @@ fn main() {
     println!("Hello world");
 }
     \end{minted}
-
     \pause
-
+    \vfill
     Already in this tiny example:
     \begin{itemize}
         \pause
@@ -65,6 +101,7 @@ fn main() {
         \item \texttt{char}, which is 32 bits in size to contain Unicode characters
     \end{itemize}
     \pause
+    \vfill
     Examples on the following slides!
 \end{frame}
 
@@ -75,6 +112,7 @@ fn main() {
         \item Bind a value to a name
     \end{itemize}
     \pause
+    \vfill
     \begin{minted}[linenos]{rust}
 fn main() {
     let letter: char = 'a';
@@ -82,8 +120,10 @@ fn main() {
 }
     \end{minted}
     \pause
+    \vfill
     The compiler can often perform type inference.
     \pause
+    \vfill
     \begin{minted}[linenos]{rust}
 fn main() {
     let letter = 'a';
@@ -101,6 +141,7 @@ fn main() {
 }
     \end{minted}
     \pause
+    \vfill
     Compiler error:
     \begin{minted}{text}
 error[E0384]: cannot assign twice to immutable variable `letter`
@@ -122,8 +163,10 @@ fn main() {
 }
     \end{minted}
     \pause
+    \vfill
     A binding shadows previous bindings of the same name.
     \pause
+    \vfill
     \begin{minted}[linenos]{rust}
 fn main() {
     let value = 'a';
@@ -142,8 +185,10 @@ fn main() {
 }
     \end{minted}
     \pause
+    \vfill
     You can omit the zero following the decimal point but not the decimal point.
     \pause
+    \vfill
     \begin{minted}[linenos]{rust}
 fn main() {
     let three: f64 = 3;  // will not compile
@@ -155,6 +200,7 @@ fn main() {
     \frametitle{Floating-point Numbers}
     If type inference cannot distinguish between \texttt{f32} and \texttt{f64}, the compiler defaults to \texttt{f64}.
     \pause
+    \vfill
     \begin{minted}[linenos]{rust}
 fn main() {
     let pi = 3.14159;  // pi's type is f64
@@ -204,6 +250,7 @@ fn main() {
     \frametitle{Integer Type Inference}
     If type inference cannot distinguish between integer types, the compiler defaults to \texttt{i32}.
     \pause
+    \vfill
     \begin{minted}[linenos]{rust}
 fn main() {
     let integer = 3;  // integer's type is i32
@@ -215,6 +262,7 @@ fn main() {
     \frametitle{Printing Values}
     We accept the functionality of the \texttt{println!} macro without looking deeper.
     \pause
+    \vfill
     \begin{minted}[linenos]{rust}
 fn main() {
     let integer = 3;
@@ -224,6 +272,7 @@ fn main() {
 }
     \end{minted}
     \pause
+    \vfill
     Output:
     \begin{minted}{text}
 The values are 3, 3.14, false, a
@@ -233,6 +282,8 @@ The values are 3, 3.14, false, a
 \begin{frame}[fragile]
     \frametitle{Printing Values}
     Bindings can be included in the format string directly.
+    \pause
+    \vfill
     \begin{minted}[linenos]{rust}
 fn main() {
     let integer = 3;
@@ -265,6 +316,7 @@ fn main() {
 }
     \end{minted}
     \pause
+    \vfill
     \texttt{\&\&} and \texttt{||} use short-circuit evaluation.
 \end{frame}
 
@@ -299,8 +351,8 @@ fn main() {
 \begin{frame}[fragile]
     \frametitle{Blocks}
     Blocks are not regularly used on their own, but they are crucial for many other language constructs.
-
     \pause
+    \vfill
     \begin{minted}[linenos]{rust}
 fn main() {
     let x = 3;
@@ -310,6 +362,7 @@ fn main() {
     println!("{x}");
 }
     \end{minted}
+    \vfill
     All \texttt{\{\ldots\}} (except \texttt{\{x\}} inside the string) are blocks.
 \end{frame}
 
@@ -326,12 +379,14 @@ fn main() {
 }
     \end{minted}
     \pause
+    \vfill
     Output:
     \begin{minted}{text}
 x = 5
 x = 3
     \end{minted}
     \pause
+    \vfill
     \begin{itemize}
         \item Bindings go out of scope at the end of the block they are declared in.
         \item Shadowed bindings can become available again.
@@ -350,12 +405,14 @@ fn main() {
 }
     \end{minted}
     \pause
+    \vfill
     Output:
     \begin{minted}{text}
 print in the block
 x = 8
     \end{minted}
     \pause
+    \vfill
     If a block ends with an expression, it evaluates to this expression.
 \end{frame}
 
@@ -370,6 +427,7 @@ fn main() {
 }
     \end{minted}
     \pause
+    \vfill
     Compiler error:
     \begin{minted}{text}
 error[E0277]: `()` doesn't implement `std::fmt::Display`
@@ -391,6 +449,7 @@ fn main() {
 }
     \end{minted}
     \pause
+    \vfill
     \begin{itemize}
         \item Line 3 is a statement, not an expression.
         \item The inner block defaults to returning to \texttt{()}.
@@ -402,6 +461,8 @@ fn main() {
 \begin{frame}[fragile]
     \frametitle{The \textit{unit} Type}
     The \textit{unit} type \texttt{()} has a single value \texttt{()}.
+    \pause
+    \vfill
     \begin{minted}[linenos]{rust}
 fn main() {
     let unit: () = ();
@@ -409,6 +470,7 @@ fn main() {
 }
     \end{minted}
     \pause
+    \vfill
     \begin{itemize}
         \item The type occurs often implicitly.
         \item Explicit uses of \texttt{()} exist.
@@ -459,6 +521,7 @@ fn main() {
 }
     \end{minted}
     \pause
+    \vfill
     When is a \texttt{;} required after a block?
 \end{frame}
 
@@ -481,6 +544,7 @@ fn main() {
     \frametitle{Blocks}
     Usually, expressions cannot exist between statements.
     \pause
+    \vfill
     \begin{minted}[linenos]{rust}
 fn main() {
     let a = 3;
@@ -490,6 +554,7 @@ fn main() {
 }
     \end{minted}
     \pause
+    \vfill
     Probably for parsing reasons.
 \end{frame}
 
@@ -497,6 +562,7 @@ fn main() {
     \frametitle{Blocks}
     Blocks are also expressions, but they do not require a semicolon.
     \pause
+    \vfill
     \begin{minted}[linenos]{rust}
 fn main() {
     let a = 3;
@@ -507,6 +573,7 @@ fn main() {
 }
     \end{minted}
     \pause
+    \vfill
     Probably for parsing reasons.
 \end{frame}
 
@@ -533,10 +600,12 @@ fn main() {
         \item A condition must be an expression evaluating to a \texttt{bool}.
         \item Parentheses around conditions are not necessary.
         \pause
+        \vfill
         \vspace{.5cm}
         \item \texttt{if} is an expression---it evaluates to the block of the chosen branch.
     \end{itemize}
     \pause
+    \vfill
     \begin{minted}[linenos]{rust}
 fn main() {
     let a = 3;
@@ -564,6 +633,7 @@ fn main() {
 }
     \end{minted}
     \pause
+    \vfill
     Compiler error:
     \begin{minted}{text}
 error[E0308]: `if` and `else` have incompatible types
@@ -602,11 +672,14 @@ fn main() {
 }
     \end{minted}
     \pause
+    \vfill
     Same compiler error.
     \pause
+    \vfill
     \begin{itemize}
         \item Even if the value is not used, its type must be fixed.
         \pause
+        \vfill
         \item As with blocks, a semicolon is not necessary.
     \end{itemize}
 \end{frame}
@@ -615,6 +688,7 @@ fn main() {
     \frametitle{\texttt{if} Expressions}
     Rust does not have the ternary operator (\texttt{?:}), but because \texttt{if} is an expression, you can use it similarly.
     \pause
+    \vfill
     \begin{minted}[linenos]{rust}
 fn main() {
     println!("{}", if true { 1 } else { 0 });
@@ -627,6 +701,7 @@ fn main() {
     \begin{itemize}
         \item \texttt{if} without \texttt{else}: The block must evaluate to \texttt{()}.
         \pause
+        \vfill
         \item The following expressions are equivalent.
     \end{itemize}
     \begin{minted}[linenos]{rust}
@@ -637,6 +712,7 @@ fn main() {
 }
     \end{minted}
     \pause
+    \vfill
     Compiler error (for Line 2):
     \begin{minted}{text}
 2 |     if true { 3 }
@@ -659,6 +735,7 @@ fn main() {
 }
     \end{minted}
     \pause
+    \vfill
     \texttt{loop} will not stop!
 \end{frame}
 
@@ -677,6 +754,7 @@ fn main() {
 }
     \end{minted}
     \pause
+    \vfill
     \texttt{loop} will not stop!
 \end{frame}
 
@@ -684,6 +762,7 @@ fn main() {
     \frametitle{\texttt{loop} Expressions}
     \texttt{loop} is an expression!
     \pause
+    \vfill
     \begin{minted}[linenos]{rust}
 fn main() {
     let mut counter: u64 = 0;
@@ -702,6 +781,7 @@ fn main() {
     \frametitle{\texttt{loop} Expressions}
     \texttt{break;} is equivalent to \texttt{break ();}.
     \pause
+    \vfill
     \begin{minted}[linenos]{rust}
 fn main() {
     let mut counter: u64 = 0;
@@ -720,6 +800,7 @@ fn main() {
     \frametitle{\texttt{loop} Expressions}
     The same way, \texttt{break} can return values of all types.
     \pause
+    \vfill
     \begin{minted}[linenos]{rust}
 fn main() {
     let mut counter: u64 = 0;
@@ -740,6 +821,7 @@ fn main() {
     \frametitle{\texttt{while} Expressions}
     The \texttt{loop} examples looked like \texttt{while} loops with extra steps.
     \pause
+    \vfill
     \begin{minted}[linenos]{rust}
 fn main() {
     let mut counter: u64 = 0;
@@ -756,6 +838,7 @@ fn main() {
     \frametitle{\texttt{while} Expressions}
     \texttt{break;} also works inside of \texttt{while}.
     \pause
+    \vfill
     \begin{minted}[linenos]{rust}
 fn main() {
     let mut counter: u64 = 0;
@@ -769,6 +852,7 @@ fn main() {
 }
     \end{minted}
     \pause
+    \vfill
     \begin{itemize}
         \item But \texttt{break} cannot return a value in \texttt{while}.
         \item \texttt{while} expression always return \texttt{()}.
@@ -779,12 +863,14 @@ fn main() {
     \frametitle{Functions}
     We have seen a function definition in every example.
     \pause
+    \vfill
     \begin{minted}[linenos]{rust}
 fn main() {
     println!("Hello world");
 }
     \end{minted}
     \pause
+    \vfill
     This example demonstrates:
     \begin{itemize}
         \item \texttt{fn} keyword indicates the definition of a named function
@@ -802,10 +888,12 @@ fn pi() -> f64 {
 }
     \end{minted}
     \pause
+    \vfill
     \begin{itemize}
         \item Functions always return a value.
         \item You must state the type of the return value after \texttt{->}.
         \pause
+        \vfill
         \item The function typically evaluates to value of the block.
         \item Early return with \texttt{return} is possible.
     \end{itemize}
@@ -819,6 +907,7 @@ fn pi() -> f64 {
         \item The following function definitions are equivalent.
     \end{itemize}
     \pause
+    \vfill
     \begin{minted}[linenos]{rust}
 fn main() {}
 
@@ -840,6 +929,7 @@ fn main() {
 }
     \end{minted}
     \pause
+    \vfill
     is equivalent to:
     \begin{minted}[linenos]{rust}
 fn do_nothing() {}
@@ -861,6 +951,7 @@ fn first_or_second(return_fst: bool, fst: usize, snd: usize) -> usize {
 }
     \end{minted}
     \pause
+    \vfill
     \begin{itemize}
         \item Functions specify zero or more arguments.
         \item Type declarations of arguments are mandatory.
@@ -878,6 +969,7 @@ fn some_function(a: usize) -> usize {
 }
     \end{minted}
     \pause
+    \vfill
     Compiler error:
     \begin{minted}{text}
 error[E0384]: cannot assign to immutable argument `a`
@@ -897,6 +989,7 @@ fn some_function(mut a: usize) -> usize {
 }
     \end{minted}
     \pause
+    \vfill
     \begin{minted}[linenos]{rust}
 fn main() {
     let value = 10;
@@ -906,10 +999,12 @@ fn main() {
     \end{minted}
     Output:
     \pause
+    \vfill
     \begin{minted}{text}
 10
     \end{minted}
     \pause
+    \vfill
     \texttt{value} is not defined as mut, the compiler guarantees non-mutability.
 \end{frame}
 
@@ -920,6 +1015,7 @@ fn main() {
         \item A tuple is a fixed-size list of heterogenoeous values.
     \end{itemize}
     \pause
+    \vfill
     \begin{minted}[linenos]{rust}
 fn main() {
     let a: (u64, char, f32) = (32, 'f', 12.47);
@@ -930,6 +1026,7 @@ fn main() {
 }
     \end{minted}
     \pause
+    \vfill
     Tuples are convenient to return multiple values from a function.
 \end{frame}
 
@@ -937,6 +1034,7 @@ fn main() {
     \frametitle{Tuples}
     You can access fields through ``tuple indexing''.   
     \pause
+    \vfill
     \begin{minted}[linenos]{rust}
 fn main() {
     let a: (u64, char, f32) = (32, 'f', 12.47);
@@ -952,6 +1050,7 @@ fn main() {
     \frametitle{Tuples}
     Alternatively, you can destructure a tuple.
     \pause
+    \vfill
     \begin{minted}[linenos]{rust}
 fn main() {
     let a: (u64, char, f32) = (32, 'f', 12.47);
@@ -968,6 +1067,7 @@ fn main() {
         \item Tuples support debug formatting.
     \end{itemize}
     \pause
+    \vfill
     \begin{minted}[linenos]{rust}
 fn main() {
     println!("{:?}", ());
@@ -991,6 +1091,7 @@ fn main() {
         \item There are a lot more formatting options (\href{https://doc.rust-lang.org/std/fmt/}{fmt documentation}).
     \end{itemize}
     \pause
+    \vfill
     \begin{minted}[linenos]{rust}
 fn main() {
     println!("{:.2}", 3.14159);  // precision of floats
@@ -1016,10 +1117,12 @@ fn main() {
 }
     \end{minted}
     \pause
+    \vfill
     \begin{itemize}
         \item The size is part of an array's type.
         \item \texttt{[i32; 4]} is a different type than \texttt{[i32; 5]}.
         \pause
+        \vfill
         \item The compiler needs to know the size at compile time.
     \end{itemize}
 \end{frame}
@@ -1028,6 +1131,7 @@ fn main() {
     \frametitle{Arrays}
     The \textit{repeat expression} allows easy initialization of large arrays.
     \pause
+    \vfill
     \begin{minted}[linenos]{rust}
 fn main() {
     let integer_array: [f64; 1024] = [0.0; 1024];
@@ -1044,6 +1148,7 @@ fn main() {
         \item The index must be of type \texttt{usize}.
     \end{itemize}
     \pause
+    \vfill
     \begin{minted}[linenos]{rust}
 fn main() {
     let array = ['a'; 100];
@@ -1052,6 +1157,7 @@ fn main() {
 }
     \end{minted}
     \pause
+    \vfill
     \begin{itemize}
         \item Out-of-bounds accesses are not memory safe.
         \item The compiler checks indices either at compile time or inserts runtime checks.
@@ -1065,6 +1171,7 @@ fn main() {
         \item Debug formatter works.
     \end{itemize}
     \pause
+    \vfill
     \begin{minted}[linenos]{rust}
 fn main() {
     let integer_array: [i32; 4] = [-23, 492, 8001, -3];
@@ -1074,6 +1181,7 @@ fn main() {
 }
     \end{minted}
     \pause
+    \vfill
     Output:
     \begin{minted}{text}
 [-23, 492, 8001, -3]
@@ -1126,10 +1234,12 @@ fn all(array: [bool; 10]) -> bool {
         \item A \texttt{struct} is a group of named or unnamed values.
     \end{itemize}
     \pause
+    \vfill
     \begin{minted}[linenos]{rust}
 struct Point(f64, f64);  // x and y coordinates
     \end{minted}
     \pause
+    \vfill
     \begin{minted}[linenos]{rust}
 struct Rectangle {
     top_left: Point,
@@ -1138,6 +1248,7 @@ struct Rectangle {
 }
     \end{minted}
     \pause
+    \vfill
     The variant with unnamed fields must be terminated with \texttt{;}, the other variant must not!
 \end{frame}
 
@@ -1145,6 +1256,7 @@ struct Rectangle {
     \frametitle{Structs}
     Instantiating values looks very similar to the type definitions.
     \pause
+    \vfill
     \begin{minted}[linenos]{rust}
 fn main() {
     let point = Point(4., 5.);
@@ -1161,6 +1273,7 @@ fn main() {
     \frametitle{Structs}
     When an initializer value is bound to the matching name, you can use \textit{field init shorthand} syntax.
     \pause
+    \vfill
     \begin{minted}[linenos]{rust}
 fn main() {
     let top_left = Point(4., 5.);
@@ -1179,12 +1292,14 @@ fn main() {
     \frametitle{Structs}
     For field access, a \texttt{struct} with unnamed fields behaves like a tuple.
     \pause
+    \vfill
     \begin{minted}[linenos]{rust}
 fn print_point(point: Point) {
     println!("Point at ({}, {})", point.0, point.1);
 }
     \end{minted}
     \pause
+    \vfill
     Destructuring also works.
     \begin{minted}[linenos]{rust}
 fn print_point(point: Point) {
@@ -1198,6 +1313,7 @@ fn print_point(point: Point) {
     \frametitle{Structs}
     If a \texttt{struct} with unnamed fields behaves like a tuple but is more verbose, what's the point?
     \pause
+    \vfill
     \begin{minted}[linenos]{rust}
 struct Point(f64, f64);  // (x, y), point in 2d space
 struct Direction(f64, f64);  // (x, y), direction/vector in 2d space
@@ -1206,6 +1322,7 @@ struct Range(f64, f64);  // (min, max), a range in 1d space
     \begin{itemize}
         \item The types store the same data.
         \pause
+        \vfill
         \item Using \texttt{struct}s instead of tuples lets the compiler check that you do not accidently pass a \texttt{Direction} to where a \texttt{Point} is expected.
     \end{itemize}
 \end{frame}
@@ -1214,6 +1331,7 @@ struct Range(f64, f64);  // (min, max), a range in 1d space
     \frametitle{Structs}
     Access fields of a named \texttt{struct} by name.
     \pause
+    \vfill
     \begin{minted}[linenos]{rust}
 fn bottom_right(rect: Rectangle) -> Point {
     let x = rect.top_left.0 + rect.width;
@@ -1228,6 +1346,7 @@ fn bottom_right(rect: Rectangle) -> Point {
     \frametitle{Structs}
     You can also desctructure a \texttt{struct} with named fields.
     \pause
+    \vfill
     \begin{minted}[linenos]{rust}
 fn bottom_right(rect: Rectangle) -> Point {
     let Rectangle { top_left, width, height } = rect;
@@ -1236,6 +1355,7 @@ fn bottom_right(rect: Rectangle) -> Point {
 }
     \end{minted}
     \pause
+    \vfill
     \begin{minted}[linenos]{rust}
 fn bottom_right(rect: Rectangle) -> Point {
     let Rectangle { top_left: p, width: w, height: h } = rect;
@@ -1252,6 +1372,7 @@ fn bottom_right(rect: Rectangle) -> Point {
         \item For now, we tag custom types with \texttt{\#[derive(Debug)]} without understanding what it does.
     \end{itemize}
     \pause
+    \vfill
     \begin{minted}[linenos]{rust}
 #[derive(Debug)]
 struct Point(f64, f64);
@@ -1276,6 +1397,7 @@ fn main() {
 }
     \end{minted}
     \pause
+    \vfill
     Output:
     \begin{minted}{text}
 Point(3.0, 4.0)
@@ -1299,9 +1421,230 @@ fn main() {
 }
     \end{minted}
     \pause
+    \vfill
     Output:
     \begin{minted}{text}
 Rectangle { top_left: Point(3.0, 4.0), width: 10.0, height: 10.0 }
+    \end{minted}
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Enums}
+    \begin{itemize}
+        \item C, Java, Python, and many other languages have enums, but Rust's enums are more powerful.
+        \item We start with the basic case.
+    \end{itemize}
+    \pause
+    \vfill
+    \begin{minted}[linenos]{rust}
+enum Color {
+    Red,
+    Green,
+    Blue,
+}
+    \end{minted}
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Enums}
+    \pause
+    \vfill
+    \begin{minted}[linenos]{rust}
+#[derive(Debug)]  // enable debug formatting
+enum Color {
+    Red,
+    Green,
+    Blue,
+}
+fn main() {
+    let red: Color = Color::Red;
+    let green = Color::Green;
+    println!("{red:?}, {green:?}");
+}
+    \end{minted}
+    \pause
+    \vfill
+    Output:
+    \begin{minted}{text}
+Red, Green
+    \end{minted}
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Enums}
+    \begin{itemize}
+        \item Each variant can have associated data attached.
+        \item As with \texttt{struct}, the data can be named or unnamed.
+    \end{itemize}
+    \pause
+    \vfill
+    \begin{minted}[linenos]{rust}
+enum Shape {
+    Circle(f64),  // radius
+    Rectangle { width: f64, height: f64 },
+    Triangle { base: f64, height: f64 },
+}
+fn main() {
+    let circ = Shape::Circle(6.7);
+    let rect = Shape::Rectangle { width: 10., height: 10. };
+}
+    \end{minted}
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Enums}
+    \begin{itemize}
+        \item Destructuring with \texttt{let} is not directly possible.
+        \item \texttt{if let} allows for conditional destructuring.
+    \end{itemize}
+    \pause
+    \vfill
+    \begin{minted}[linenos]{rust}
+fn is_circle(shape: Shape) -> bool {
+    if let Shape::Circle(radius) = shape {
+        true
+    } else {
+        false
+    }
+}
+    \end{minted}
+    \pause
+    \vfill
+    \begin{minted}[linenos]{rust}
+fn is_large_triangle(shape: Shape, min_base: f64) -> bool {
+    if let Shape::Triangle { base, height } = shape {
+        base >= min_base
+    } else {
+        false
+    }
+}
+    \end{minted}
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Enums}
+    Unused bindings' names should start with \texttt{\_}---or just be \texttt{\_}.
+    \pause
+    \vfill
+    \begin{minted}[linenos]{rust}
+fn is_circle(shape: Shape) -> bool {
+    if let Shape::Circle(_) = shape {  // radius is not needed
+        true
+    } else {
+        false
+    }
+}
+fn is_large_triangle(shape: Shape, min_base: f64) -> bool {
+    if let Shape::Triangle { base, height: _ } = shape {
+        base >= min_base
+    } else {
+        false
+    }
+}
+    \end{minted}
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{\texttt{match} Expressions}
+    To cover multiple cases, the \texttt{match} expression is more comfortable than a chain of \texttt{if let}s.
+    \pause
+    \vfill
+    \begin{minted}[linenos]{rust}
+fn area(shape: Shape) -> f64 {
+    match shape {
+        Shape::Circle(radius) => radius * radius * 3.14159,
+        Shape::Rectangle { width, height } => {
+            let area = width * height;
+
+            area
+        }
+        Shape::Triangle { base: b, height: h} => 0.5 * b * h,
+    }
+}
+    \end{minted}
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{\texttt{match} Expressions}
+    \begin{itemize}
+        \item Each case of a \texttt{match} expression is called a \textit{match arm}.
+        \item Each arm has to evaluate to the same type.
+        \pause
+        \vfill
+        \vspace{.5cm}
+        \item We have observed arms of the form \texttt{<pattern> => <expression>}.
+        \item Arms can also have the form \texttt{<pattern> <guard> => <expression>}.
+        \pause
+        \vfill
+        \vspace{.5cm}
+        \item Usually, an arm is terminated by a \texttt{,}
+        \item For the last arm, the \texttt{,} is optional but idiomatic.
+        \item If the expression is a block, the \texttt{,} is optional. Skipping it is idiomatic.
+        \pause
+        \vfill
+        \vspace{.5cm}
+        \item Examples!
+    \end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{\texttt{match} Expressions}
+
+    \begin{minted}[linenos]{rust}
+// Arbitraty score: Two points for large triangles, one for other
+// triangles, none for other shapes
+fn score(shape: Shape, min_base: f64) -> u8 {
+    match shape {
+        Shape::Triangle { base, height: _ } if base >= min_base => 2,
+        Shape::Triangle { base: _, height: _ } => 1,
+        _ => 0,
+    }
+}
+    \end{minted}
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{\texttt{match} Expressions}
+
+    \begin{minted}[linenos]{rust}
+fn xor(arg1: bool, arg2: bool) -> bool {
+    match (arg1, arg2) {
+        (true, true) => false,
+        (true, false) => true,
+        (false, true) => true,
+        (false, false) => false,
+    }
+}
+    \end{minted}
+    \pause
+    \vfill
+    \begin{minted}[linenos]{rust}
+fn xor(arg1: bool, arg2: bool) -> bool {
+    match (arg1, arg2) {
+        (a, b) if a != b => true,
+        _ => false,
+    }
+}
+    \end{minted}
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{\texttt{match} Expressions}
+
+    \begin{minted}[linenos]{rust}
+// return number of iterations it took to reach 1
+fn collatz(start: u64) -> u64 {
+    let mut i = start;
+    let mut steps = 0;
+    loop {
+        i = match i {
+            1 => return steps,
+            i if i % 2 == 0 => i / 2,
+            i => 3 * i + 1,
+        };
+        steps += 1;
+    }
+}
     \end{minted}
 \end{frame}
 
