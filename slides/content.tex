@@ -1413,4 +1413,104 @@ fn is_large_triangle(shape: Shape, min_base: f64) -> bool {
 }
     \end{minted}
 \end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{\texttt{match} Expressions}
+    To cover multiple cases, the \texttt{match} expression is more comfortable than a chain of \texttt{if let}s.
+    \pause
+    \begin{minted}[linenos]{rust}
+fn area(shape: Shape) -> f64 {
+    match shape {
+        Shape::Circle(radius) => radius * radius * 3.14159,
+        Shape::Rectangle { width, height } => {
+            let area = width * height;
+
+            area
+        }
+        Shape::Triangle { base: b, height: h} => 0.5 * b * h,
+    }
+}
+    \end{minted}
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{\texttt{match} Expressions}
+    \begin{itemize}
+        \item Each case of a \texttt{match} expression is called a \textit{match arm}.
+        \item Each arm has to evaluate to the same type.
+        \pause
+        \vspace{.5cm}
+        \item We have observed arms of the form \texttt{<pattern> => <expression>}.
+        \item Arms can also have the form \texttt{<pattern> <guard> => <expression>}.
+        \pause
+        \vspace{.5cm}
+        \item Usually, an arm is terminated by a \texttt{,}
+        \item For the last arm, the \texttt{,} is optional but idiomatic.
+        \item If the expression is a block, the \texttt{,} is optional. Skipping it is idiomatic.
+        \pause
+        \vspace{.5cm}
+        \item Examples!
+    \end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{\texttt{match} Expressions}
+
+    \begin{minted}[linenos]{rust}
+// Arbitraty score: Two points for large triangles, one for other
+// triangles, none for other shapes
+fn score(shape: Shape, min_base: f64) -> u8 {
+    match shape {
+        Shape::Triangle { base, height: _ } if base >= min_base => 2,
+        Shape::Triangle { base: _, height: _ } => 1,
+        _ => 0,
+    }
+}
+    \end{minted}
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{\texttt{match} Expressions}
+
+    \begin{minted}[linenos]{rust}
+fn xor(arg1: bool, arg2: bool) -> bool {
+    match (arg1, arg2) {
+        (true, true) => false,
+        (true, false) => true,
+        (false, true) => true,
+        (false, false) => false,
+    }
+}
+    \end{minted}
+    \pause
+    \begin{minted}[linenos]{rust}
+fn xor(arg1: bool, arg2: bool) -> bool {
+    match (arg1, arg2) {
+        (a, b) if a != b => true,
+        _ => false,
+    }
+}
+    \end{minted}
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{\texttt{match} Expressions}
+
+    \begin{minted}[linenos]{rust}
+// return number of iterations it took to reach 1
+fn collatz(start: u64) -> u64 {
+    let mut i = start;
+    let mut steps = 0;
+    loop {
+        i = match i {
+            1 => return steps,
+            i if i % 2 == 0 => i / 2,
+            i => 3 * i + 1,
+        };
+        steps += 1;
+    }
+}
+    \end{minted}
+\end{frame}
+
 \end{document}
