@@ -1226,6 +1226,27 @@ fn bottom_right(rect: Rectangle) -> Point {
 
 \begin{frame}[fragile]
     \frametitle{Structs}
+    You can also desctructure a \texttt{struct} with named fields.
+    \pause
+    \begin{minted}[linenos]{rust}
+fn bottom_right(rect: Rectangle) -> Point {
+    let Rectangle { top_left, width, height } = rect;
+
+    Point(top_left.0 + width, top_left.1 + height)
+}
+    \end{minted}
+    \pause
+    \begin{minted}[linenos]{rust}
+fn bottom_right(rect: Rectangle) -> Point {
+    let Rectangle { top_left: p, width: w, height: h } = rect;
+
+    Point(p.0 + w, p.1 + h)
+}
+    \end{minted}
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Structs}
     \begin{itemize}
         \item By default, \texttt{struct}s offer neither normal nor debug formatting.
         \item For now, we tag custom types with \texttt{\#[derive(Debug)]} without understanding what it does.
