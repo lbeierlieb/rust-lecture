@@ -1,4 +1,39 @@
+\usetheme{CambridgeUS}
 
+\definecolor{rustorange}{RGB}{183,65,14}
+\setbeamercolor{structure}{fg=rustorange}
+\setbeamercolor{palette primary}{bg=rustorange,fg=white}
+\setbeamercolor{palette secondary}{bg=rustorange!80!black,fg=white}
+\setbeamercolor{palette tertiary}{bg=rustorange!60!black,fg=white}
+\setbeamercolor{palette quaternary}{bg=rustorange!40!black,fg=white}
+\setbeamercolor{title}{fg=rustorange}
+\setbeamercolor{frametitle}{fg=rustorange}
+\setbeamercolor{item}{fg=rustorange}
+\setbeamercolor{section in head/foot}{bg=rustorange,fg=white}
+\setbeamercolor{author in head/foot}{fg=black,bg=rustorange}
+\setbeamercolor{title in head/foot}{fg=black,bg=rustorange!85!black}
+\setbeamercolor{date in head/foot}{fg=black,bg=rustorange}
+\setbeamercolor{pagenumber in head/foot}{fg=black,bg=rustorange!85!black}
+
+\setbeamertemplate{footline}{
+  \leavevmode%
+  \hbox{%
+  \begin{beamercolorbox}[wd=.3\paperwidth,ht=2.5ex,dp=1.5ex,left]{author in head/foot}%
+    \hspace*{2ex}\insertshortauthor
+  \end{beamercolorbox}%
+  \begin{beamercolorbox}[wd=.4\paperwidth,ht=2.5ex,dp=1.5ex,center]{title in head/foot}%
+    \begingroup
+    \hypersetup{linkcolor=black}%
+    \insertshorttitle
+    \endgroup
+  \end{beamercolorbox}%
+  \begin{beamercolorbox}[wd=.2\paperwidth,ht=2.5ex,dp=1.5ex,center]{date in head/foot}%
+    \insertshortdate
+  \end{beamercolorbox}%
+  \begin{beamercolorbox}[wd=.1\paperwidth,ht=2.5ex,dp=1.5ex,right]{pagenumber in head/foot}%
+    \insertframenumber{} / \inserttotalframenumber\hspace*{2ex}
+  \end{beamercolorbox}}%
+}
 
 \usepackage{minted} % code listings
 \usepackage{hyperref} % hyperlinks
