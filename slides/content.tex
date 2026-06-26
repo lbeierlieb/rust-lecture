@@ -2192,4 +2192,235 @@ fn collatz(start: u64) -> u64 {
     \end{minted}
 \end{frame}
 
+\begin{frame}[fragile]
+    \frametitle{Ownership}
+    We approach Rust's ownership-based memory management with a familiar example.
+    \vfill
+    \begin{minted}[linenos]{rust}
+fn main() {
+    let mut x = 3;
+    let y = x;
+    x += 10;
+    println!("x = {x}, y = {y}");
+}
+    \end{minted}
+    \pause
+    \vfill
+    Output:
+    \pause
+    \begin{minted}{text}
+x = 13, y = 3
+    \end{minted}
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Ownership}
+    No surprises here. Let's visualize what the memory could look like:
+    \pause
+    \vfill
+    \begin{center}
+        \begin{tikzpicture}
+            \node[above] at (1.75, 0) {stack};
+            \drawbox{0}{-0.0}{3.5}{0.5}{\ldots}
+            \drawbox{0}{-0.5}{3.5}{0.5}{saved RBP}
+            \drawbox{0}{-1}{3.5}{0.5}{\texttt{x}: 13}
+            \drawbox{0}{-1.5}{3.5}{0.5}{\texttt{y}: 3}
+            \draw[->, dotted] (1.75,-2) -- (1.75,-2.5);
+        \end{tikzpicture}
+    \end{center}
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Ownership}
+    Now, the same with a \texttt{struct}.
+    \vfill
+    \begin{minted}[linenos]{rust}
+#[derive(Debug)]
+struct WrappedI32(i32);
+
+fn main() {
+    let mut x = WrappedI32(3);
+    let y = x;
+    x.0 += 10;
+    println!("x = {x:?}, y = {y:?}");
+}
+    \end{minted}
+    \pause
+    \vfill
+    Output:
+    \pause
+    Compiler error!
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Ownership}
+    \begin{minted}{text}
+error[E0382]: use of moved value: `x.0`
+ --> src/main.rs:7:5
+  |
+5 |     let mut x = WrappedI32(3);
+  |         ----- move occurs because `x` has type `WrappedI32`,
+  |               which does not implement the `Copy` trait
+6 |     let y = x;
+  |             - value moved here
+7 |     x.0 += 10;
+  |     ^^^^^^^^^ value used here after move
+    \end{minted}
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Ownership}
+    \begin{itemize}
+        \item In Rust, each value has exactly one \textit{owner}.
+        \item When the owner goes out of scope, the value gets \textit{dropped}.
+    \end{itemize}
+    \pause
+    \vfill
+    \begin{minted}[linenos]{rust}
+fn main() {
+    let x = 3;  // x owns the i32 value
+    {
+        let mut y = 4;  // y owns another i32 value
+        y += 10;
+    }  // y goes out of scope, the 14 gets dropped
+}  // x goes out of scope, the 3 gets dropped
+    \end{minted}
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Ownership}
+    \begin{itemize}
+        \item A type can define clean-up actions that run when one of its values gets dropped.
+        \pause
+        \item Examples
+        \begin{itemize}
+            \item A \texttt{struct} storing a pointer to heap memory: Free the memory.
+            \item A \texttt{struct} storing a raw file descriptor (\texttt{i32}): Close the file.
+            \item A \texttt{struct} representing that you hold a mutex lock: Release the lock.
+        \end{itemize}
+        \pause
+        \item This mechanism is really powerful. You cannot forget to clean up, it happens automatically!
+    \end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Ownership}
+    \begin{itemize}
+        \item For the given examples, making bitwise copies would break the whole concept.
+        \pause
+        \item By default, values get \textit{moved}---not copied---when assigned to a new owner.
+    \end{itemize}
+    \pause
+    \vfill
+    \begin{minted}[linenos]{rust}
+struct WrappedI32(i32);
+
+fn main() {
+    let x = WrappedI32(3);  // x is the owner
+    let y = x;  // ownership moves from x to y.
+                // x must no longer be accessed!
+}  // y goes out of scope, the value gets dropped
+    \end{minted}
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Ownership}
+    From the memory perspective, a move is also a copy.
+    \pause
+    \vfill
+    \begin{center}
+        \begin{tikzpicture}
+            \node[above] at (1.75, 0) {stack};
+            \drawbox{0}{-0.0}{3.5}{0.5}{\ldots}
+            \drawbox{0}{-0.5}{3.5}{0.5}{saved RBP}
+            \drawbox{0}{-1}{3.5}{0.5}{\texttt{x}: WrappedI32(3)}
+            \drawbox{0}{-1.5}{3.5}{0.5}{\texttt{y}: WrappedI32(3)}
+            \draw[->, dotted] (1.75,-2) -- (1.75,-2.5);
+            \pause
+            \draw[red] (0,-1) -- (3.5,-1.5);
+            \draw[red] (0,-1.5) -- (3.5,-1);
+        \end{tikzpicture}
+    \end{center}
+    \pause
+    \vfill
+    The compiler just will not let you access the previous owner.
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Ownership}
+    Passing values to function calls:
+    \pause
+    \vfill
+    \begin{minted}[linenos]{rust}
+struct WrappedI32(i32);
+
+fn main() {
+    let x = WrappedI32(3);  // x is the owner
+    func(x);  // ownership moves into the function.
+              // x must no longer be accessed!
+}
+
+fn func(wrapped: WrappedI32) {
+    println!("{}", wrapped.0)
+}  // wrapped goes out of scope, the value gets dropped
+    \end{minted}
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Ownership}
+    Return values can also transfer ownership.
+    \pause
+    \vfill
+    \begin{minted}[linenos]{rust}
+struct WrappedI32(i32);
+
+fn main() {
+    let x = WrappedI32(3);  // x is the owner
+    let y = func(x);  // ownership moves into the function, then to y
+}  // y goes out of scope, the value gets dropped
+
+fn func(wrapped: WrappedI32) -> WrappedI32 {
+    wrapped
+}
+    \end{minted}
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Ownership}
+    Move vs. Copy
+    \begin{itemize}
+        \item The compiler cannot know whether your \texttt{struct}s and \texttt{enum}s are safe to copy.
+        \item Types have to be especially marked to be safe for copying.
+        \pause
+        \vspace{.3cm}
+        \item Primitives types are copyable.
+        \item Arrays and tuples containing only copyable types are copyable.
+        \pause
+        \vspace{.3cm}
+        \item You can use \texttt{\#[derive(Clone, Copy)]} to make your types copyable (we will understand in detail later).
+        \item If a field of a type is not copyable, the whole type cannot be copyable. 
+    \end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Ownership}
+    \begin{minted}[linenos]{rust}
+#[derive(Debug, Clone, Copy)]
+struct WrappedI32(i32);
+
+fn main() {
+    let mut x = WrappedI32(3);
+    let y = x;  // copy! x keeps its value, y gets a copy
+    x.0 += 10;
+    println!("x = {x:?}, y = {y:?}");
+}
+    \end{minted}
+    \pause
+    \vfill
+    Output:
+    \begin{minted}{text}
+x = WrappedI32(13), y = WrappedI32(3)
+    \end{minted}
+\end{frame}
+
 \end{document}
