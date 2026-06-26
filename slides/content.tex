@@ -48,6 +48,13 @@
     pdfborder={0 0 0}
 }
 
+\usepackage{tikz} % drawings
+% \drawbox{x}{y}{width}{height}{text}
+% (x, y) is the TOP-LEFT corner of the box
+\newcommand{\drawbox}[5]{%
+    \draw (#1, #2) rectangle (#1+#3, #2-#4);
+    \node at (#1+#3/2, #2-#4/2) {#5};
+}
 \title{Memory-safe Programming: An Introduction to Rust}
 \subtitle{Rust at the University of Bamberg}
 \author{Lukas Beierlieb M.Sc.}
@@ -58,12 +65,549 @@
 \frame[plain]{\titlepage}
 
 \begin{frame}[fragile]
-    \frametitle{Copyright / Acknowledgements}
-
+    \frametitle{Copyright}
+    This presentation is licensed under the CC BY-NC-SA license.
 \end{frame}
 
-\begin{frame}{Why Rust?}
-    This is a slide.
+\begin{frame}[fragile]
+    \frametitle{\texttt{\$whoami}}
+    \begin{itemize}
+        \item 1997: Born in Bamberg
+        \pause
+        \vspace{.3cm}
+        \item 2013-2018: Bachelor Computer Science at Uni Würzburg
+        \item 2018-2020: Master Computer Science at Uni Würzburg
+        \pause
+        \vspace{.3cm}
+        \item 2020-2024: Phd Student and Research Assistent at Uni Würzburg
+        \begin{itemize}
+            \item Thesis: ``Testing Privileged Virtual Domains for Performance and Resilience''
+            \item First contact with Rust in Dec. 2022
+        \end{itemize}
+        \pause
+        \vspace{.3cm}
+        \item Since 2024: Software Engineer at \href{https://cyberus-technology.de}{Cyberus Technology GmbH} in Dresden
+        \begin{itemize}
+            \item Rust, Nix/NixOS, Virtualization
+            \item Finishing PhD thesis in the spare time
+        \end{itemize}
+    \end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Rust}
+    Rust is a systems programming language that promises:
+    \begin{itemize}
+        \item High performance
+        \item Memory safety
+        \item Type safety
+        \item Concurrency
+    \end{itemize}
+\end{frame}
+
+
+\begin{frame}[fragile]
+    \frametitle{The History of Rust}
+    \begin{itemize}
+        \item \textbf{2006}: Started as a personal project by Graydon Hoare (working at Mozilla)
+        \item \textbf{2009}: Project is sponsored by Mozilla
+        \item \textbf{2010}: Official announcement
+        \item \textbf{2015}: First stable release (1.0)
+    \end{itemize}
+    \pause
+    \vfill
+    Graydon Hoare created Rust out of his frustration with crashing elevator software.
+\end{frame}
+
+\begin{frame}
+    \frametitle{Why Rust?}
+    \pause
+    Why not use\ldots
+    \vfill
+    \begin{itemize}
+        \pause
+        \item C?
+        \pause
+        \item C++?
+        \pause
+        \item Java?
+        \pause
+        \item Python?
+        \pause
+        \item any other language?
+    \end{itemize}
+    \pause
+    \vfill
+    We take a look at problems in other languages.
+\end{frame}
+
+\begin{frame}
+    \frametitle{Compilation vs. Interpretation}
+    Compilation
+    \begin{itemize}
+        \item Compiler translates source code to machine instructions.
+        \item Potential for low overhead and high performance.
+        \item The compiler can check the code before any execution happens.
+        \item Examples: C, C++
+    \end{itemize}
+\end{frame}
+
+\begin{frame}
+    \frametitle{Compilation vs. Interpretation}
+    Interpretation
+    \begin{itemize}
+        \item Interpreter executes source code directly.
+        \pause
+        \item Interpretation overheaded causes performance penalty.
+        \item Interpreter is required for execution.
+        \item Errors occur only at runtime.
+        \pause
+        \item Convenient!
+        \item Examples: Python, Javascript, Bash, Ruby, Nix
+    \end{itemize}
+    \pause
+    \vfill
+    Rust is a compiled language.
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Static vs. Dynamic Typing}
+    Dynamic Typing
+    \vfill
+    \begin{minted}[linenos]{python}
+# Python3
+var1 = 3
+sum = var1 + 5
+var1 = "hello"
+print(var1)
+var1 = lambda x: x
+var1(253)
+    \end{minted}
+    \pause
+    \vfill
+    Type checks happen at runtime.
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Static vs. Dynamic Typing}
+    Dynamic Typing
+    \vfill
+    \begin{itemize}
+        \item Great for flexibility and convenience.
+        \item Can make code easier to understand (more consise).
+        \pause
+        \vspace{.3cm}
+        \item Can make code harder to understand (missing type information).
+        \pause
+        \item Type checking has a performance penalty.
+        \item Errors occur only at runtime.
+    \end{itemize}
+    \pause
+    \vfill
+    Runtime type errors are not great for a language with safety as a goal.
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Static vs. Dynamic Typing}
+    Static Typing
+    \pause
+    \vfill
+    \begin{itemize}
+        \item Type checks at compile time.
+        \item No performance overhead.
+        \pause
+        \vspace{.3cm}
+        \item Type definitions introduce verbosity.
+        \item Expressiveness and complexity depend on the type system of a language (C vs. Java vs. Rust vs. Haskell).
+    \end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Java's Type Verbosity}
+    \begin{minted}[linenos]{java}
+// Java 6
+Map<String, List<Integer>> map = new HashMap<String, List<Integer>>();
+    \end{minted}
+    \pause
+    \vfill
+    \begin{minted}[linenos]{java}
+// Java 7
+Map<String, List<Integer>> map = new HashMap<>();
+    \end{minted}
+    \pause
+    \vfill
+    \begin{minted}[linenos]{java}
+// Java 10
+var map = new HashMap<String, List<Integer>>();
+    \end{minted}
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Java's Type Verbosity}
+    \begin{minted}[linenos]{java}
+var map = new HashMap<>();
+map.put("key", "value");
+    \end{minted}
+    \pause
+    \vfill
+    This snippet is valid Java.
+    However, the equivalent without \texttt{var} is:
+    \pause
+    \vfill
+    \begin{minted}[linenos]{java}
+HashMap<Object, Object> map = new HashMap<>();
+map.put("key", "value");
+    \end{minted}
+    \pause
+    \vfill
+    \texttt{var} only takes the initializer into account.
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Rust's Type System}
+    \begin{itemize}
+        \item Rust has a quite expressive and complex type system.
+        \item Type inference helps to avoid unnecessary verbosity.
+        \pause
+        \item Parts of type system is one of the causes for Rust's steep learning curve.
+    \end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Data Races}
+    \begin{minted}[linenos]{c}
+// Data-race example in C
+void* worker(void* arg) {
+    for (int i = 0; i < 1000000; i++) {
+        counter++;
+    }
+    return NULL;
+}
+int main() {
+    pthread_t t1, t2;
+    pthread_create(&t1, NULL, worker, NULL);
+    pthread_create(&t2, NULL, worker, NULL);
+    <...> // wait for threads to finish and inspect counter
+}
+    \end{minted}
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Data Races}
+    The final value of \texttt{counter} depends on the execution order.
+    \vfill
+    \begin{itemize}
+        \item \texttt{t1} reads \texttt{counter}: \texttt{100}.
+        \item \texttt{t2} reads \texttt{counter}: \texttt{100}.
+        \item \texttt{t2} writes \texttt{counter}: \texttt{101}.
+        \item \texttt{t1} writes \texttt{counter}: \texttt{101}. One increment got lost.
+    \end{itemize}
+    \pause
+    \vfill
+    Rust guarantees the absense of data races.
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Error Handling}
+    Many languages use exceptions for error cases.
+    \pause
+    \vfill
+    \begin{minted}[linenos]{java}
+// Java
+String input = readStdIn();
+int num = Integer.parseInt(input);
+System.out.println("You entered the number " + num);
+    \end{minted}
+    \pause
+    \vfill
+    \begin{itemize}
+        \item This snippet is valid Java.
+        \pause
+        \item \texttt{parseInt} throws a \texttt{NumberFormatException} for unparsable strings.
+        \item The function signature does not indicate this fact.
+        \pause
+        \item Java's design implies error handling is optional.
+        \item If you want handle all exceptions, how do you know which can occur?
+    \end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Error Handling}
+    \begin{itemize}
+        \item C does not have exceptions.
+        \item A common pattern for functions is
+        \begin{itemize}
+            \item Return value indicates success or gives an error code.
+            \item The actual return value is passed and set by reference.
+        \end{itemize}
+    \end{itemize}
+    \pause
+    \vfill
+    \begin{minted}[linenos]{java}
+struct timeval tv;
+
+int err = gettimeofday(&tv, NULL);
+
+if (err != 0) {
+    printf("Error getting time\n");
+    return 1;
+}
+    \end{minted}
+    \pause
+    \vfill
+    Nothing prevents you from accessing \texttt{tv} without checking the return value.
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Error Handling}
+    Rust differentiates two kinds of errors.
+    \pause
+    \vfill
+    \begin{itemize}
+        \item Unrecoverable errors: Stop the current thread of execution.
+        \pause
+        \item Recoverable errors
+        \begin{itemize}
+            \item The type system forces functions that can error to represent the error cases in their return values.
+            \pause
+            \item If a fallible function returns a value, you have to handle the error case to access this value.
+            \item If a fallible function does not return a value, the compiler will warn if you ignore the potential error.
+        \end{itemize}
+    \end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Cost of Abstractions}
+Basic Java implementation to sum the squares of all even numbers in \texttt{List<Integer> numbers}:
+    \begin{minted}[linenos]{java}
+int sum = 0;
+for (int i = 0; i < numbers.size(); i++) {
+    int num = numbers[i];
+    if (num % 2 == 0) {
+        sum += num * num;
+    }
+}
+    \end{minted}
+    \pause
+    \vfill
+Java 8 introduced \texttt{Stream}s for functional-style collection processing.
+    \begin{minted}[linenos]{java}
+int sum = numbers.stream()
+    .filter(x -> x % 2 == 0)
+    .mapToInt(x -> x * 2)
+    .sum();
+    \end{minted}
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Cost of Abstractions}
+    \begin{itemize}
+        \item \href{https://www.baeldung.com/java-streams-vs-loops}{java-streams-vs-loops} benchmarked streams over 3x slower than loops.
+        \pause
+        \vspace{.3cm}
+        \item Rust aims to provide zero-cost abstractions.
+        \item The following Rust code should compile to the same instructions as a loop with manual operators.
+    \end{itemize}
+    \pause
+    \vfill
+    \begin{minted}[linenos]{rust}
+let sum = numbers.iter()
+    .filter(|x| x.is_multiple_of(2))
+    .map(|x| x.pow(2))
+    .sum();
+    \end{minted}
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Memory Management}
+    Processes are split into segments.
+    \vfill
+    \begin{itemize}
+        \item \textit{text}: Instructions
+        \item \textit{rodata}: Read-only data (e.g., string literals)
+        \item \textit{data}: Initialized global variables
+        \item \textit{bss}: Uninitialized global variables
+        \pause
+        \vspace{.3cm}
+        \item \textit{stack}: Local variables, data for function calls. Managed by the instructions.
+        \pause
+        \vspace{.3cm}
+        \item \textit{heap}: Runtime-allocated memory. There are different management strategies.
+    \end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Memory Management}
+    In C, the programmer must manually manage heap allocations.
+    \pause
+    \vfill
+    \begin{minted}[linenos]{c}
+long *arr = malloc(5 * sizeof(long));
+
+for (int i = 0; i < 5; i++) {
+    arr[i] = i * 10;
+}
+
+free(arr);
+    \end{minted}
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Memory Management}
+    \begin{center}
+        \begin{tikzpicture}
+            \node[above] at (1.75, 0) {stack};
+            \drawbox{0}{-0.0}{3.5}{0.5}{\ldots}
+            \drawbox{0}{-0.5}{3.5}{3}{stackframe n-1}
+            \drawbox{0}{-3.5}{3.5}{0.5}{saved RBP}
+            \drawbox{0}{-4}{3.5}{0.5}{\texttt{arr}}
+            \draw[->] (3,-4.25) -- (5.5,-5);
+            \draw[->, dotted] (1.75,-4.5) -- (1.75,-5);
+
+            \node[above] at (1.5+5.5, 0) {heap};
+            \draw[->, dotted] (5.5+1.75,-2.5) -- (5.5+1.75,-2);
+            \drawbox{5.5}{-2.5}{3.5}{0.5}{40}
+            \drawbox{5.5}{-3.0}{3.5}{0.5}{30}
+            \drawbox{5.5}{-3.5}{3.5}{0.5}{20}
+            \drawbox{5.5}{-4.0}{3.5}{0.5}{10}
+            \drawbox{5.5}{-4.5}{3.5}{0.5}{0}
+            \drawbox{5.5}{-5.0}{3.5}{1}{\ldots}
+        \end{tikzpicture}
+    \end{center}
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Memory Management}
+    There are different ways for manual memory management to go wrong.
+    \pause
+    \vfill
+    \begin{itemize}
+        \item Memory leak
+        \item Double free
+        \pause
+        \item Use after free
+        \item Out-of-bounds access
+    \end{itemize}
+    \pause
+    \vfill
+    Leaking memory is safe, the others must not happen in an memory-safe language.
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Memory Management}
+    Many languages (e.g., Java) rely on garbage collection to free heap memory when no longer needed.
+    \pause
+    \vfill
+    Different approaches for garbage collection exist.
+    One example is \textit{Mark and Sweep} garbage collection.
+    \begin{itemize}
+        \item Mark stage: Going through all references to heap objects and marking the objects as still in use. The references can be global variables or local variables (on the stack).
+        \item Sweep stage: Going through all heap objects and freeing the unmarked ones.
+    \end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Memory Management}
+    Garbage collection solves a class for memory-safety problems and is convenient, but it does not come for free.
+    \pause
+    \vfill
+    \begin{itemize}
+        \item Code has to run to perform the garbage collection, causing overhead.
+        \item It is not deterministic when the garbage collector will run.
+        \item Programs require a runtime environment including the garbage collection.
+    \end{itemize}
+    \pause
+    \vfill
+    These properties make garbage collection less suitable for:
+    \begin{itemize}
+        \item Embedded devices
+        \item Operating-system kernels and drivers
+        \item Low-latency applications\footnote{\url{https://discord.com/blog/why-discord-is-switching-from-go-to-rust}}
+    \end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Memory Management}
+    Another common approach is reference counting (e.g., used by CPython).
+    \pause
+    \vfill
+    \begin{minted}[linenos]{python}
+# Python
+text = "Hello world"
+print(text)
+text = "something else"
+    \end{minted}
+    \pause
+    \vfill
+    \begin{itemize}
+        \item Line 2: Allocation of \texttt{"Hello world"}; \texttt{text} is the only reference.
+        \item Line 3: Passing a copy of the reference to \texttt{print}; reference count is two.
+        \item Line 3: \texttt{print} returns and drops its reference.
+        \item Line 4: \texttt{text} stores another reference; reference count of \texttt{"Hello world"} drops to zero.
+    \end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Memory Management}
+    Reference counting is deterministic, but:
+    \pause
+    \vfill
+    \begin{itemize}
+        \item Reference counting causes overhead.
+        \item Cyclic references can cause memory leaks.
+    \pause
+    \vfill
+        \item Rust uses ownership-based memory management---memory safe, deterministic, no overhead.
+        \item You can also find (explicit) uses of reference counting in Rust.
+    \end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Rust's Popularity}
+  \begin{itemize}
+    \item Rust is the most loved language in the Stack Overflow developer surveys 2016-2025 (\href{https://survey.stackoverflow.co/2025/technology\#admired-and-desired}{2025~report}).
+    \pause
+    \item Since Linux 6.1 (Dec. 2022), Rust is an experimentally supported programming language for kernel development (\href{https://lwn.net/Articles/910762/}{article}).
+    \item Dec. 2025, ``The (successful) end of the kernel Rust experiment'' (\href{https://lwn.net/Articles/1049831/}{article}).
+    \pause
+    \item Windows 11 kernel contains Rust since 2023 (\href{https://rustify.rs/articles/rust-in-windows-kernel-microsoft-2026}{article}).
+    \item Microsoft supports and encourages writing Windows drivers in Rust (\href{https://github.com/microsoft/windows-drivers-rs}{repo}).
+    \pause
+    \item The US government recommends the use of memory-safe languages, such as Rust (Feb.~2024, \href{https://bidenwhitehouse.archives.gov/wp-content/uploads/2024/02/Final-ONCD-Technical-Report.pdf}{document}).
+  \end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Rust at Cyberus Technology}
+    \begin{itemize}
+        \item \href{https://github.com/cloud-hypervisor/cloud-hypervisor}{Cloud Hypervisor}
+        \begin{itemize}
+            \item Virtual Machine Monitor (like QEMU), running on top of KVM or MSHV.
+            \item Initially developed by Intel (\href{https://thenewstack.io/intel-releases-cloud-hypervisor-based-on-same-components-as-amazons-firecracker/}{article}).
+            \item Now governed by the Linux Foundation.
+            \item Cyberus is one of the major contributors.
+            \item \href{https://www.bsi.bund.de/SharedDocs/Zulassung/DE/Produkte/Cyberus_Hypervisor_BSI-VSA-10950.html}{BSI Accreditation}
+        \end{itemize}
+            \pause
+            \vspace{.3cm}
+        \item \href{https://github.com/cyberus-technology/usbvfiod}{usbvfiod}
+        \begin{itemize}
+            \item An emulated USB3 controller.
+            \item Enables USB-device passthrough for Cloud Hypervisor.
+        \end{itemize}
+    \end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Let's Start to Learn!}
+    \begin{itemize}
+        \item We start slow and discover more step by step.
+        \item The goal is to understand everything we are doing.
+        \pause
+        \item Along the way, we will have to accept a few things as ``magic''---temporarily.
+        \pause
+        \item Many code examples will not represent idiomatic Rust code.
+    \end{itemize}
 \end{frame}
 
 \begin{frame}[fragile]
