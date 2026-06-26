@@ -563,6 +563,42 @@ text = "something else"
 \end{frame}
 
 \begin{frame}[fragile]
+    \frametitle{Rust's Popularity}
+  \begin{itemize}
+    \item Rust is the most loved language in the Stack Overflow developer surveys 2016-2025 (\href{https://survey.stackoverflow.co/2025/technology\#admired-and-desired}{2025~report}).
+    \pause
+    \item Since Linux 6.1 (Dec. 2022), Rust is an experimentally supported programming language for kernel development (\href{https://lwn.net/Articles/910762/}{article}).
+    \item Dec. 2025, ``The (successful) end of the kernel Rust experiment'' (\href{https://lwn.net/Articles/1049831/}{article}).
+    \pause
+    \item Windows 11 kernel contains Rust since 2023 (\href{https://rustify.rs/articles/rust-in-windows-kernel-microsoft-2026}{article}).
+    \item Microsoft supports and encourages writing Windows drivers in Rust (\href{https://github.com/microsoft/windows-drivers-rs}{repo}).
+    \pause
+    \item The US government recommends the use of memory-safe languages, such as Rust (Feb.~2024, \href{https://bidenwhitehouse.archives.gov/wp-content/uploads/2024/02/Final-ONCD-Technical-Report.pdf}{document}).
+  \end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Rust at Cyberus Technology}
+    \begin{itemize}
+        \item \href{https://github.com/cloud-hypervisor/cloud-hypervisor}{Cloud Hypervisor}
+        \begin{itemize}
+            \item Virtual Machine Monitor (like QEMU), running on top of KVM or MSHV.
+            \item Initially developed by Intel (\href{https://thenewstack.io/intel-releases-cloud-hypervisor-based-on-same-components-as-amazons-firecracker/}{article}).
+            \item Now governed by the Linux Foundation.
+            \item Cyberus is one of the major contributors.
+            \item \href{https://www.bsi.bund.de/SharedDocs/Zulassung/DE/Produkte/Cyberus_Hypervisor_BSI-VSA-10950.html}{BSI Accreditation}
+        \end{itemize}
+            \pause
+            \vspace{.3cm}
+        \item \href{https://github.com/cyberus-technology/usbvfiod}{usbvfiod}
+        \begin{itemize}
+            \item An emulated USB3 controller.
+            \item Enables USB-device passthrough for Cloud Hypervisor.
+        \end{itemize}
+    \end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
     \frametitle{Hello World!}
     \begin{minted}[linenos]{rust}
 fn main() {
