@@ -893,6 +893,26 @@ fn main() {
 \end{frame}
 
 \begin{frame}[fragile]
+    \frametitle{Assignment Operators}
+    \begin{minted}[linenos]{rust}
+fn main() {
+    let mut x = 5;
+    x = 5;
+    x += 1;
+    x -= 1;
+    x *= 2;
+    x /= 2;
+    x %= 2;
+    x &= 1;
+    x |= 1;
+    x ^= 1;
+    x <<= 1;
+    x >>= 1;
+}
+    \end{minted}
+\end{frame}
+
+\begin{frame}[fragile]
     \frametitle{Blocks}
     Blocks are not regularly used on their own, but they are crucial for many other language constructs.
     \pause
