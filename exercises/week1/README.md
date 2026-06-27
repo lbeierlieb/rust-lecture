@@ -1,28 +1,48 @@
 # Week 1 Exercise: Zombie Infection Simulation
 
-Watch this [YouTube video](https://www.youtube.com/watch?v=g-g-NdyYwsY) for nice visualizations and explanations about the simulation this exercise aims to implement.
-Short summary: The world is a grid of squares (in this exercise we use a fix world size of 100x100).
-Initially, a grid cell is either uninhabited or a human lives on this cell.
-In a world where 3000 of the 10000 cells are inhabited, the population density is 30%.
+There are three exercises to get first-hand experience with the concepts from the first lecture session.
 
-When we now infect one of the humans, and this zombie infects his direct neighbors, which again infect their direct neighbors.
-The infection chain continues until either all humans in the world are zombies or until uninhabited cells separate the zombie crowd from the remaining humans.
-When the world is densily populated, the former case is more likey, whereas in a sparsely populated world the latter case dominates.
+## Technical Setup
 
-We implement this simulation in Rust with the goal of determining how the population density affects the percentage of infections at the end of a simulation run.
+The exercises are intended to be solved without needing knowledge about Rust project setup, toolchain installation, or IDEs.
+For each exercise template in [templates](./templates), copy the content of the template and paste the lines into a [Rust Playground session](https://play.rust-lang.org/).
+The `main` function takes over the job of unit tests and checks your implementation.
+You can temporarily replace the contents of the `main` function with your own code for debugging.
 
-## Technical setup
+## Exercises
 
-The exercise is intended to be solved without needing knowledge about Rust project setup, toolchain installation, or IDEs.
-Copy the contents of [template.rs](./template.rs) and paste the lines into a [Rust Playground session](https://play.rust-lang.org/).
+The exercise are indepent of each other and you can solve in any order, but we recommend the order that the following task descriptions are in.
 
-## Code from the Template
+### `fibonacci` Exercise
 
-The template already specifies 
+Replace the `todo!()` with your implementation of the Fibonacci function, which maps:
+- n -> f(n)
+- 0 -> 0
+- 1 -> 1
+- 2 -> 1
+- 3 -> 2
+- 4 -> 3
+- 5 -> 5
+- ...
 
+### `color_counting` Exercise
 
-## Possible Solution
+Replace the `todo!()` with an implementation that can walk through an array of `ColorEntry`s and sum up the counts of each `Color`.
 
-A suggestion for a solution is available at [zombiesim/src/main.rs](./zombiesim/src/main.rs).
+### `cpu` Exercise
+
+Your task is the implementation of a simple CPU, which is commonly referred to as "stack machine".
+The machine should have a stack with space for five `u64` values.
+The machine should support the four instructions `Push`, `Pop`, `Add`, `Multiply`.
+The documentation of the `Instruction` type explains the expected CPU behavior for each instruction in detail.
+
+Your tasks:
+- Implement a type `Cpu` that stores all the requried CPU state and that derives at least `Debug`.
+- Replace the first `todo!()` with code that creates a fresh CPU with empty stack.
+- Replace the second `todo!()` with an implementation that emulates the instructions as the documentation specifies.
+
+## Possible Solutions
+
+Suggestions for solutions are available at [solutions](./solutions).
 Note that this example implementation is not a showcase for idiomatic Rust code.
 The code is restricted to use only Rust language features taught in the first four hours of the lecture.
