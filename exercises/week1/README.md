@@ -1,4 +1,4 @@
-# Week 1 Exercise: Zombie Infection Simulation
+# Week 1 Exercises
 
 There are three exercises to get first-hand experience with the concepts from the first lecture session.
 
