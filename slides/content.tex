@@ -699,6 +699,22 @@ error[E0384]: cannot assign twice to immutable variable `letter`
 \end{frame}
 
 \begin{frame}[fragile]
+    \frametitle{Mutating Bindings}
+    \begin{itemize}
+        \item Immutable bindings are easier to reason about.
+        \item You must explicitly enable mutability on demand with the \texttt{mut} keyword.
+    \end{itemize}
+    \pause
+    \vfill
+    \begin{minted}[linenos]{rust}
+fn main() {
+    let mut letter = 'a';
+    letter = 'b';
+}
+    \end{minted}
+\end{frame}
+
+\begin{frame}[fragile]
     \frametitle{Binding Shadowing}
     \begin{minted}[linenos]{rust}
 fn main() {
