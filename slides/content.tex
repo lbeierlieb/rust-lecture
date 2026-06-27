@@ -1091,7 +1091,9 @@ fn main() {
 
 \begin{frame}[fragile]
     \frametitle{Blocks}
-    We have observed block examples such as:
+    When do we need a semicolon?
+    \pause
+    \vfill
     \begin{minted}[linenos]{rust}
 fn main() {
     {
@@ -1102,7 +1104,7 @@ fn main() {
     \end{minted}
     \pause
     \vfill
-    When is a \texttt{;} required after a block?
+    Compiler error! Semicolon expected.
 \end{frame}
 
 \begin{frame}[fragile]
@@ -1140,21 +1142,19 @@ fn main() {
 
 \begin{frame}[fragile]
     \frametitle{Blocks}
-    Blocks are also expressions, but they do not require a semicolon.
+    Blocks are also expressions, but they do not always require a semicolon.
     \pause
     \vfill
     \begin{minted}[linenos]{rust}
 fn main() {
     let a = 3;
-    { a }  // block is an expression and evaluates to 3 but needs no ;
-    { a };  // semicolon is allowed
-    { a };;;  // actually, you can always place additional semicolons
+    { () }  // block evaluates to (). No semicolon needed
+    { a; }  // block also evaluates to ()
+    { a; };  // semicolon is allowed
+    { a };  // block is an expression and evaluates to 3 
     let b = 3;
 }
     \end{minted}
-    \pause
-    \vfill
-    Probably for parsing reasons.
 \end{frame}
 
 \begin{frame}[fragile]
@@ -1195,6 +1195,27 @@ fn main() {
         a
     } else {
         b
+    };
+}
+    \end{minted}
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{\texttt{if} Expressions}
+    As with blocks, a semicolon is necessary when a standalone \texttt{if} expression evaluates to a value other than \texttt{()}.
+    \pause
+    \vfill
+    \begin{minted}[linenos]{rust}
+fn main() {
+    if true {
+        3
+    } else {
+        5
+    };
+    if false {
+        ()
+    } else {
+        ()
     }
 }
     \end{minted}
@@ -1247,7 +1268,7 @@ fn main() {
         3
     } else {
         'a'
-    }
+    };
     println!("hello");
 }
     \end{minted}
@@ -1286,9 +1307,9 @@ fn main() {
     \end{itemize}
     \begin{minted}[linenos]{rust}
 fn main() {
-    if true { 3 }
-    if true { 3 } else {}
-    if true { 3 } else { () }
+    if true { 3 };
+    if true { 3 } else {};
+    if true { 3 } else { () };
 }
     \end{minted}
     \pause
