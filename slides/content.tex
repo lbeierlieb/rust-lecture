@@ -103,6 +103,10 @@
         \item Type safety
         \item Concurrency
     \end{itemize}
+    \pause
+    \vfill
+    There is a differentation between Safe Rust and Unsafe Rust.
+    Until explicitly mentioned, we always talk about Safe Rust.
 \end{frame}
 
 
@@ -699,6 +703,22 @@ error[E0384]: cannot assign twice to immutable variable `letter`
 \end{frame}
 
 \begin{frame}[fragile]
+    \frametitle{Mutating Bindings}
+    \begin{itemize}
+        \item Immutable bindings are easier to reason about.
+        \item You must explicitly enable mutability on demand with the \texttt{mut} keyword.
+    \end{itemize}
+    \pause
+    \vfill
+    \begin{minted}[linenos]{rust}
+fn main() {
+    let mut letter = 'a';
+    letter = 'b';
+}
+    \end{minted}
+\end{frame}
+
+\begin{frame}[fragile]
     \frametitle{Binding Shadowing}
     \begin{minted}[linenos]{rust}
 fn main() {
@@ -893,6 +913,26 @@ fn main() {
 \end{frame}
 
 \begin{frame}[fragile]
+    \frametitle{Assignment Operators}
+    \begin{minted}[linenos]{rust}
+fn main() {
+    let mut x = 5;
+    x = 5;
+    x += 1;
+    x -= 1;
+    x *= 2;
+    x /= 2;
+    x %= 2;
+    x &= 1;
+    x |= 1;
+    x ^= 1;
+    x <<= 1;
+    x >>= 1;
+}
+    \end{minted}
+\end{frame}
+
+\begin{frame}[fragile]
     \frametitle{Blocks}
     Blocks are not regularly used on their own, but they are crucial for many other language constructs.
     \pause
@@ -1055,7 +1095,9 @@ fn main() {
 
 \begin{frame}[fragile]
     \frametitle{Blocks}
-    We have observed block examples such as:
+    When do we need a semicolon?
+    \pause
+    \vfill
     \begin{minted}[linenos]{rust}
 fn main() {
     {
@@ -1066,7 +1108,7 @@ fn main() {
     \end{minted}
     \pause
     \vfill
-    When is a \texttt{;} required after a block?
+    Compiler error! Semicolon expected.
 \end{frame}
 
 \begin{frame}[fragile]
@@ -1104,21 +1146,19 @@ fn main() {
 
 \begin{frame}[fragile]
     \frametitle{Blocks}
-    Blocks are also expressions, but they do not require a semicolon.
+    Blocks are also expressions, but they do not always require a semicolon.
     \pause
     \vfill
     \begin{minted}[linenos]{rust}
 fn main() {
     let a = 3;
-    { a }  // block is an expression and evaluates to 3 but needs no ;
-    { a };  // semicolon is allowed
-    { a };;;  // actually, you can always place additional semicolons
+    { () }  // block evaluates to (). No semicolon needed
+    { a; }  // block also evaluates to ()
+    { a; };  // semicolon is allowed
+    { a };  // block is an expression and evaluates to 3 
     let b = 3;
 }
     \end{minted}
-    \pause
-    \vfill
-    Probably for parsing reasons.
 \end{frame}
 
 \begin{frame}[fragile]
@@ -1159,6 +1199,27 @@ fn main() {
         a
     } else {
         b
+    };
+}
+    \end{minted}
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{\texttt{if} Expressions}
+    As with blocks, a semicolon is necessary when a standalone \texttt{if} expression evaluates to a value other than \texttt{()}.
+    \pause
+    \vfill
+    \begin{minted}[linenos]{rust}
+fn main() {
+    if true {
+        3
+    } else {
+        5
+    };
+    if false {
+        ()
+    } else {
+        ()
     }
 }
     \end{minted}
@@ -1211,7 +1272,7 @@ fn main() {
         3
     } else {
         'a'
-    }
+    };
     println!("hello");
 }
     \end{minted}
@@ -1250,9 +1311,9 @@ fn main() {
     \end{itemize}
     \begin{minted}[linenos]{rust}
 fn main() {
-    if true { 3 }
-    if true { 3 } else {}
-    if true { 3 } else { () }
+    if true { 3 };
+    if true { 3 } else {};
+    if true { 3 } else { () };
 }
     \end{minted}
     \pause
@@ -1500,6 +1561,8 @@ fn first_or_second(return_fst: bool, fst: usize, snd: usize) -> usize {
         \item Functions specify zero or more arguments.
         \item Type declarations of arguments are mandatory.
         \item Each argument is a binding available in the function's block.
+        \pause
+        \item Function overloading is not allowed.
     \end{itemize}
 \end{frame}
 
