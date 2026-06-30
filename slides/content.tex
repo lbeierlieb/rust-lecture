@@ -2487,4 +2487,966 @@ x = WrappedI32(13), y = WrappedI32(3)
     \end{minted}
 \end{frame}
 
+\begin{frame}[fragile]
+    \frametitle{Borrowing/References}
+    Passing ownership to everywhere where you need the value is inconvenient.
+    \pause
+    \begin{itemize}
+        \item Returning ownership in return value is annoying, especially with multiple values.
+        \item Bitwise copies become more expensive with larger types.
+        \pause
+        \vspace{.3cm}
+        \item You can create references to values.
+        \item This process is called \textit{borrowing}.
+    \end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Borrowing/References}
+    \begin{minted}[linenos]{rust}
+fn main() {
+    let number = 3;
+    let reference: &i32 = &number;
+    let another_ref = &number;  // type inference works for references
+    let ref_ref: &&i32 = &reference;
+    let another_ref_ref = &reference;
+}
+    \end{minted}
+    \pause
+    \vfill
+    Let us look at printing references, so that we can inspect more closely. 
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Borrowing/References}
+    \begin{minted}[linenos]{rust}
+fn main() {
+    let number = 3;
+    let reference = &number;
+    let ref_ref = &reference;
+
+    println!("{number} {reference} {ref_ref}");
+}
+    \end{minted}
+    \pause
+    \vfill
+    Output:
+    \pause
+    \begin{minted}{text}
+3 3 3
+    \end{minted}
+    \pause
+    \vfill
+    The default formatter for references prints the referenced value.
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Borrowing/References}
+    \begin{minted}[linenos]{rust}
+fn main() {
+    let number = 3;
+    let reference = &number;
+    let ref_ref = &reference;
+
+    println!("{number} {ref:p} {ref_ref:p} {:p}", &ref_ref);
+}
+    \end{minted}
+    \pause
+    \vfill
+    Output (non-deterministic due to address space layout randomization (ASLR)):
+    \begin{minted}{text}
+3 0x7ffc8c0148ac 0x7ffc8c0148b0 0x7ffc8c0148b8
+    \end{minted}
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Borrowing/References}
+    \begin{center}
+        \begin{tikzpicture}
+            \node[above] at (1.75, 0) {stack};
+            \drawbox{0}{-0.0}{3.5}{0.5}{\ldots}
+            \drawbox{0}{-0.5}{3.5}{1}{saved RBP}
+            \drawbox{0}{-1.5}{3.5}{1}{\texttt{ref\_ref}}
+            \drawbox{0}{-2.5}{3.5}{1}{\texttt{reference}}
+            \drawbox{0}{-3.5}{3.5}{0.5}{\texttt{number}: 3}
+            \draw[->, dotted] (1.75,-4) -- (1.75,-4.5);
+            \draw[->] (2.8,-2) -- (4.5,-2) -- (4.5, -3.5) -- (3.55, -3.5);
+            \draw[->, dashed] (2.8,-3) -- (4,-3) -- (4, -4) -- (3.55, -4);
+            \node[left,font=\small] at (0, -2.5) {\texttt{0x7ffc8c0148b8}};
+            \node[left,font=\small] at (0, -3.5) {\texttt{0x7ffc8c0148b0}};
+            \node[left,font=\small] at (0, -4) {\texttt{0x7ffc8c0148ac}};
+        \end{tikzpicture}
+    \end{center}
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Borrowing/References}
+    \begin{minted}[linenos]{rust}
+fn main() {
+    let number = 3;
+    let reference = &number;
+    let ref_ref = &&number;
+    let dereferenced_num: i32 = *reference;
+    let one_step_deref: &i32 = *ref_ref;  
+    let double_deref: i32 = **ref_ref;
+}
+    \end{minted}
+    \vfill
+    Type inference could infer all the explicit type declarations above.
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Borrowing/References}
+    \begin{minted}[linenos]{rust}
+struct NonCopyStruct(u64);
+
+fn main() {
+    let val = NonCopyStruct(3);
+    let reference = &val;
+    let deref = *reference;
+}
+    \end{minted}
+    \pause
+    \vfill
+    Output:
+    \pause
+    Compiler error!
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Borrowing/References}
+    \begin{minted}{text}
+error[E0507]: cannot move out of `*reference` which is behind a
+shared reference
+ --> src/main.rs:6:17
+  |
+6 |     let deref = *reference;
+  |                 ^^^^^^^^^^ move occurs because `*reference` has
+  |                            type `NonCopyStruct`, which does not
+  |                            implement the `Copy` trait
+    \end{minted}
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Borrowing/References}
+    \begin{minted}[linenos]{rust}
+struct NonCopyStruct(u64);
+
+fn main() {
+    let val = NonCopyStruct(3);
+    let reference = &val;
+    let field = reference.0;
+}
+    \end{minted}
+    \pause
+    \vfill
+    Valid?
+    \pause
+    \vfill
+    \begin{itemize}
+        \item Yes!
+        \pause
+        \item Field access auto-dereferences: \texttt{(*reference).0}
+        \item Also works for double, triple, quadruple, \ldots references.
+    \end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Borrowing/References}
+    \begin{minted}[linenos]{rust}
+struct NonCopyStruct(u64);
+
+fn main() {
+    let val = NonCopyStruct(3);
+    let reference = &val;
+    reference.0 = 5;
+}
+    \end{minted}
+    \pause
+    \vfill
+    Valid?
+    \pause
+    \vfill
+    \begin{itemize}
+        \item Compiler error.
+        \item \texttt{val} is immutable. The compiler guarantees the value will not change.
+    \end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Borrowing/References}
+    \begin{minted}{text}
+error[E0594]: cannot assign to `reference.0`, which is behind
+a `&` reference
+ --> src/main.rs:6:5
+  |
+6 |     reference.0 = 5;
+  |     ^^^^^^^^^^^^^^^ `reference` is a `&` reference, so it
+  |                     cannot be written to
+  |
+help: consider changing this to be a mutable reference
+  |
+5 |     let reference = &mut val;
+  |                      +++
+    \end{minted}
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Borrowing/References}
+    \begin{minted}[linenos]{rust}
+struct NonCopyStruct(u64);
+
+fn main() {
+    let val = NonCopyStruct(3);
+    let reference = &mut val;
+    reference.0 = 5;
+}
+    \end{minted}
+    \pause
+    \vfill
+    Now valid?
+    \pause
+    \vfill
+    Still not.
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Borrowing/References}
+    \begin{minted}{text}
+error[E0596]: cannot borrow `val` as mutable, as it is not
+declared as mutable
+ --> src/main.rs:5:21
+  |
+5 |     let reference = &mut val;
+  |                     ^^^^^^^^ cannot borrow as mutable
+  |
+help: consider changing this to be mutable
+  |
+4 |     let mut val = NonCopyStruct(3);
+  |         +++
+    \end{minted}
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Borrowing/References}
+    \begin{minted}[linenos]{rust}
+struct NonCopyStruct(u64);
+
+fn main() {
+    let mut val = NonCopyStruct(3);
+    let reference = &mut val;
+    reference.0 = 5;
+}
+    \end{minted}
+    \pause
+    \vfill
+    Valid?
+    \pause
+    \vfill
+    \begin{itemize}
+        \item Yes!
+        \pause
+        \item Usage rules differ significantly between immutable and mutable references. Coming up!
+    \end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Borrowing/References}
+    \begin{minted}[linenos]{rust}
+fn main() {
+    let val = 3;
+    let ref1 = &val;
+    let ref2 = &val;
+    let ref3 = ref2;
+
+    println!("{val} {ref1} {ref2} {ref3}");
+}
+    \end{minted}
+    \pause
+    \vfill
+    Output:
+    \pause
+    \vfill
+    \begin{minted}{text}
+3 3 3 3
+    \end{minted}
+    \pause
+    \vfill
+    You can have multiple immutable references to same data.
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Borrowing/References}
+    \begin{minted}[linenos]{rust}
+fn main() {
+    let mut val = 3;
+    let ref1 = &val;
+    let ref2 = &val;
+    let ref3 = ref2;
+
+    println!("{val} {ref1} {ref2} {ref3}");
+}
+    \end{minted}
+    \pause
+    \vfill
+    Output:
+    \pause
+    \vfill
+    \begin{minted}{text}
+3 3 3 3
+    \end{minted}
+    \pause
+    \vfill
+    The compiler warns that the \texttt{mut} is unnecessary.
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Borrowing/References}
+    \begin{minted}[linenos]{rust}
+fn main() {
+    let mut val = 3;
+    let ref1 = &val;
+    val = 5;
+
+    println!("{val} {ref1}");
+}
+    \end{minted}
+    \pause
+    \vfill
+    Output:
+    \pause
+    \vfill
+    Compiler error!
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Borrowing/References}
+    \begin{minted}{text}
+error[E0506]: cannot assign to `val` because it is borrowed
+ --> src/main.rs:4:5
+  |
+3 |     let ref1 = &val;
+  |                ---- `val` is borrowed here
+4 |     val = 5;
+  |     ^^^^^^^ `val` is assigned to here but it was already borrowed
+5 |
+6 |     println!("{val} {ref1}");
+  |                      ---- borrow later used here
+    \end{minted}
+    \pause
+    \vfill
+    \begin{itemize}
+        \item The owner must not modify the value while references exist.
+        \pause
+        \item If you have an immutable reference, the compiler guarantees that the value will not change.
+    \end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Borrowing/References}
+    \begin{minted}[linenos]{rust}
+fn main() {
+    let mut val = 3;
+    let ref1 = &mut val;
+    let ref2 = &mut val;
+
+    println!("{val} {ref1} {ref2}");
+}
+    \end{minted}
+    \vfill
+    Output:
+    \pause
+    \vfill
+    Compiler error!
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Borrowing/References}
+    \begin{minted}{text}
+error[E0499]: cannot borrow `val` as mutable more than once at a time
+ --> src/main.rs:4:16
+  |
+3 |     let ref1 = &mut val;
+  |                -------- first mutable borrow occurs here
+4 |     let ref2 = &mut val;
+  |                ^^^^^^^^ second mutable borrow occurs here
+5 |
+6 |     println!("{val} {ref1} {ref2}");
+  |                      ---- first borrow later used here
+    \end{minted}
+    \pause
+    \vfill
+    There cannot be multiple mutable borrows.
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Borrowing/References}
+    \begin{minted}[linenos]{rust}
+fn main() {
+    let mut val = 3;
+    let ref1 = &mut val;
+    let ref2 = &val;
+
+    println!("{val} {ref1} {ref2}");
+}
+    \end{minted}
+    \vfill
+    Output:
+    \pause
+    \vfill
+    Compiler error!
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Borrowing/References}
+    \begin{minted}{text}
+error[E0502]: cannot borrow `val` as immutable because it is also
+borrowed as mutable
+ --> src/main.rs:4:16
+  |
+3 |     let ref1 = &mut val;
+  |                -------- mutable borrow occurs here
+4 |     let ref2 = &val;
+  |                ^^^^ immutable borrow occurs here
+5 |
+6 |     println!("{val} {ref1} {ref2}");
+  |                      ---- mutable borrow later used here
+    \end{minted}
+    \pause
+    \vfill
+    You can have either one mutable reference or immutable references.
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Borrowing/References}
+    \begin{minted}[linenos]{rust}
+fn main() {
+    let mut val = 3;
+    let ref1 = &mut val;
+    let ref2 = ref1;
+
+    println!("{val} {ref1} {ref2}");
+}
+    \end{minted}
+    \vfill
+    Output:
+    \pause
+    \vfill
+    Compiler error. But not because of multiple mutable references.
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Borrowing/References}
+    \begin{minted}{text}
+error[E0382]: borrow of moved value: `ref1`
+ --> src/main.rs:6:22
+  |
+3 |     let ref1 = &mut val;
+  |         ---- move occurs because `ref1` has type `&mut i32`,
+  |              which does not implement the `Copy` trait
+4 |     let ref2 = ref1;
+  |                ---- value moved here
+5 |
+6 |     println!("{val} {ref1} {ref2}");
+  |                      ^^^^ value borrowed here after move
+    \end{minted}
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Borrowing/References}
+    \begin{itemize}
+        \item \texttt{\&} and \texttt{\&mut} are a great example for copyable and non-copyable types.
+        \item References borrow access to a value, but they are values with owners themselves.
+        \item Both kind of reference are just pointers---just 64-bit addresses.\footnote{References can have additional data; we'll discover later.}
+        \pause
+        \item Multiple immutable references to the same value can exist: Copying is safe.
+        \pause
+        \item There can only be a single mutable reference. Copying would create a second mutable reference.
+    \end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Borrowing/References}
+    \begin{minted}[linenos]{rust}
+fn main() {
+    let mut val = 3;
+    let ref1 = &mut val;
+
+    println!("{val} {ref1}");
+}
+    \end{minted}
+    \vfill
+    Output:
+    \pause
+    \vfill
+    Compiler error.
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Borrowing/References}
+    \begin{minted}{text}
+error[E0502]: cannot borrow `val` as immutable because it is also borrowed as mutable
+ --> src/main.rs:5:16
+  |
+3 |     let ref1 = &mut val;
+  |                -------- mutable borrow occurs here
+4 |
+5 |     println!("{val} {ref1}");
+  |                ^^^   ---- mutable borrow later used here
+  |                |
+  |                immutable borrow occurs here
+    \end{minted}
+    \pause
+    \vfill
+    \begin{itemize}
+        \item The same error, in disguise.
+        \item The \texttt{println!} macro creates an immutable reference.
+    \end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Borrowing/References}
+    \begin{minted}[linenos]{rust}
+fn main() {
+    let mut val = 3;
+    let ref1 = &mut val;
+
+    println!("{ref1}");
+}
+    \end{minted}
+    \vfill
+    Output:
+    \pause
+    \vfill
+    \begin{minted}{text}
+3
+    \end{minted}
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Borrowing/References}
+    While an immutable reference existed, we could not modify the value.
+    \vfill
+    \begin{minted}[linenos]{rust}
+fn main() {
+    let mut val = 3;
+    let ref1 = &mut val;
+
+    val = 5;
+
+    println!("{ref1}");
+}
+    \end{minted}
+    \vfill
+    Output:
+    \pause
+    \vfill
+    \begin{minted}{text}
+3
+    \end{minted}
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Borrowing/References}
+    \begin{minted}{text}
+error[E0506]: cannot assign to `val` because it is borrowed
+ --> src/main.rs:5:5
+  |
+3 |     let ref1 = &mut val;
+  |                -------- `val` is borrowed here
+4 |
+5 |     val = 5;
+  |     ^^^^^^^ `val` is assigned to here but it was already borrowed
+6 |
+7 |     println!("{ref1}");
+  |                ---- borrow later used here
+    \end{minted}
+    \pause
+    \vfill
+    The owner must never modify the value while references exist.
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Borrowing/References}
+    \begin{minted}[linenos]{rust}
+fn main() {
+    let mut val = 3;
+    let ref1 = &mut val;
+
+    let copied_val = val;
+
+    println!("{ref1}");
+}
+    \end{minted}
+    \vfill
+    Output:
+    \pause
+    \vfill
+    Compiler error!
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Borrowing/References}
+    \begin{minted}{text}
+error[E0503]: cannot use `val` because it was mutably borrowed
+ --> src/main.rs:5:22
+  |
+3 |     let ref1 = &mut val;
+  |                -------- `val` is borrowed here
+4 |
+5 |     let copied_val = val;
+  |                      ^^^ use of borrowed `val`
+6 |
+7 |     println!("{ref1}");
+  |                ---- borrow later used here
+    \end{minted}
+    \pause
+    \vfill
+    The owner must not access the value at all while a mutable reference exists!
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Borrowing/References}
+    \begin{minted}[linenos]{rust}
+fn main() {
+    let val = 3;
+    let mut ref1 = &val;
+
+    println!("{ref1}");
+}
+    \end{minted}
+    \vfill
+    Output:
+    \pause
+    \vfill
+    \begin{minted}{text}
+3
+    \end{minted}
+    \pause
+    \vfill
+    Do not confuse \texttt{\&mut} and a mutable \texttt{\&} binding.
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Borrowing/References}
+    \texttt{\&mut} is reference that can mutate the referenced value.
+    \pause
+    \vfill
+    \begin{minted}[linenos]{rust}
+fn main() {
+    let mut val = 3;
+    let ref1 = &mut val;
+    *ref1 = 5;
+}
+    \end{minted}
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Borrowing/References}
+    \texttt{let mut \&} creates a mutable binding, which happens to be an immutable reference.
+    \pause
+    \vfill
+    \begin{minted}[linenos]{rust}
+fn main() {
+    let a = 3;
+    let b = 5;
+    let mut ref1 = &a;
+    ref1 = &b;
+}
+    \end{minted}
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Borrowing/References}
+    A combination is possible.
+    \pause
+    \vfill
+    \begin{minted}[linenos]{rust}
+fn main() {
+    let mut a = 3;
+    let mut b = 5;
+    let mut ref1 = &mut a;
+    ref1 = &mut b;
+    *ref1 = 7;
+    println!("{a} {b}");
+}
+    \end{minted}
+    \vfill
+    Output:
+    \pause
+    \vfill
+    \begin{minted}{text}
+3 7
+    \end{minted}
+\end{frame}
+
+
+\begin{frame}[fragile]
+    \frametitle{Borrowing/References}
+    Summary of the borrowing rules:
+    \vfill
+    \begin{itemize}
+        \item While a mutable reference exists, there must not be other references.
+        \item While a mutable reference exists, the owner must not use the value.
+        \pause
+        \item Thus, a mutable reference has exclusive access to the value.
+        \pause
+        \item Anything else would allow for data races.
+        \pause
+        \vspace{.3cm}
+        \item Multiple immutable references can exist simultaneously.
+        \item While a immutable reference exists, the owner must not modify the value.
+        \pause
+        \item Shared read-only access is unproblematic.
+    \end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Borrowing/References}
+    Another perspective:
+    \vfill
+    \begin{itemize}
+        \item When someone passes you an immutable reference, the compiler guarantees that the referenced value will never change. 
+        \pause
+        \item When someone passes you a mutable reference, the compiler guarantess that nobody else can access the value.
+        \vspace{.3cm}
+        \pause
+        \item Great for you: Avoiding obscure non-local bugs.
+        \item Great for compiler optimization.
+    \end{itemize}
+    \pause
+    \vfill
+    We look at examples of references as function arguments soon.
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Borrowing/References}
+    We now look at a few reference peculiarities.
+    \vfill
+    \begin{minted}[linenos]{rust}
+fn main() {
+    let val = 3;
+    let ref_ref = &&val;
+
+    println!("{ref_ref}");
+}
+    \end{minted}
+    \vfill
+    Output:
+    \begin{minted}{text}
+3
+    \end{minted}
+    \pause
+    \vfill
+    How? Where is \texttt{\&val}?
+\end{frame}
+
+
+\begin{frame}[fragile]
+    \frametitle{Borrowing/References}
+    We take a look at memory to see what is happening.
+    \pause
+    \vfill
+    \begin{minted}[linenos]{rust}
+fn main() {
+    let val = 3;
+    let ref_ref = &&val;
+
+    println!("addr of val:      {:p}", &val);
+    println!("addr of ref_ref:  {:p}", &ref_ref);
+    println!("value of ref_ref: {:p}", ref_ref);
+}
+    \end{minted}
+    \vfill
+    Output:
+    \begin{minted}{text}
+addr of val:      0x7fff6c19062c
+addr of ref_ref:  0x7fff6c190630
+value of ref_ref: 0x7fff6c190638
+    \end{minted}
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Borrowing/References}
+    \begin{minted}{text}
+addr of val:      0x7fff6c19062c
+addr of ref_ref:  0x7fff6c190630
+value of ref_ref: 0x7fff6c190638
+    \end{minted}
+    \pause
+    \begin{center}
+        \begin{tikzpicture}
+            \node[above] at (1.75, 0) {stack};
+            \drawbox{0}{-0.0}{3.5}{0.5}{\ldots}
+            \drawbox{0}{-0.5}{3.5}{1}{saved RBP}
+            \draw[->, dotted] (1.75,-4) -- (1.75,-4.5);
+            \node[left,font=\small] at (0, -2.5) {\texttt{0x7fff6c190638}};
+            \node[left,font=\small] at (0, -3.5) {\texttt{0x7fff6c190630}};
+            \node[left,font=\small] at (0, -4) {\texttt{0x7fff6c19062c}};
+            \pause
+            \drawbox{0}{-3.5}{3.5}{0.5}{\texttt{val}: 3}
+            \pause
+            \drawbox{0}{-2.5}{3.5}{1}{\texttt{ref\_ref}}
+            \pause
+            \drawbox{0}{-1.5}{3.5}{1}{}
+            \draw[->] (2.8,-3) -- (4,-3) -- (4, -2.5) -- (3.55, -2.5);
+            \pause
+            \draw[->, dashed] (2.8,-2) -- (4.5,-2) -- (4.5, -4) -- (3.55, -4);
+        \end{tikzpicture}
+    \end{center}
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Borrowing/References}
+    The compiler added a local variable for the intermediate reference.
+    Equivalent code:
+    \vfill
+    \begin{minted}[linenos]{rust}
+fn main() {
+    let val = 3;
+    let compiler_added = &val;
+    let ref_ref = &compiler_added;
+}
+    \end{minted}
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Borrowing/References}
+    \begin{minted}[linenos]{rust}
+fn main() {
+    let ref_ref = &&3;
+
+    println!("{ref_ref}");
+}
+    \end{minted}
+    \vfill
+    Output:
+    \pause
+    \begin{minted}{text}
+3
+    \end{minted}
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Borrowing/References}
+    \begin{minted}[linenos]{rust}
+fn main() {
+    let ref_ref = &&3;
+
+    println!("&ref_ref:  {:p}", &ref_ref);
+    println!("ref_ref:   {:p}", ref_ref);
+    println!("*ref_ref:  {:p}", *ref_ref);
+}
+    \end{minted}
+    \pause
+    \vfill
+    Output:
+    \begin{minted}{text}
+&ref_ref:  0x7fff37943720
+ref_ref:   0x59223b1c2ad8
+*ref_ref:  0x59223b176994
+    \end{minted}
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Borrowing/References}
+    \begin{minted}{text}
+&ref_ref:  0x7fff37943720
+ref_ref:   0x59223b1c2ad8
+*ref_ref:  0x59223b176994
+    \end{minted}
+    \pause
+    \vfill
+    \begin{center}
+        \begin{tikzpicture}
+            \node[above] at (1.75, 0) {stack};
+            \drawbox{0}{-0.0}{3.5}{0.5}{\ldots}
+            \drawbox{0}{-0.5}{3.5}{1}{saved RBP}
+            \draw[->, dotted] (1.75,-2.5) -- (1.75,-3);
+            \node[left,font=\small] at (0, -2.5) {\texttt{0x7fff37943720}};
+            \pause
+            \drawbox{0}{-1.5}{3.5}{1}{\texttt{ref\_ref}}
+            \pause
+            \draw[->] (2.8,-2) -- (4.5,-2) -- (4.5, -1.75) -- (5.45, -1.75);
+            \node[right,font=\small] at (5.5+3.9, -1.75) {\texttt{0x59223b1c2ad8}};
+            \pause
+            \drawbox{5.5}{-0.75}{3.5}{1}{}
+            \pause
+            \draw[->] (5.5+2.8,-1.25) -- (5.5+4,-1.25) -- (5.5+4, -3.25) -- (5.5+3.55, -3.25);
+            \node[right,font=\small] at (5.5+3.9, -3.25) {\texttt{0x59223b176994}};
+            \pause
+            \drawbox{5.5}{-2.75}{3.5}{0.5}{3}
+            \pause
+            \node[above] at (1.75+5.5, 0) {rodata};
+            \node[above] at (1.75+5.5, -0.5) {\ldots};
+            \node[above] at (1.75+5.5, -2.4) {\ldots};
+            \node[above] at (1.75+5.5, -3.8) {\ldots};
+        \end{tikzpicture}
+    \end{center}
+    \pause
+    \vfill
+    The compiler performs \textit{constant promotion}.
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Borrowing/References}
+    \begin{minted}[linenos]{rust}
+fn main() {
+    let a = 3;
+    let b = &a;
+
+    let sum = a + b;
+
+    println!("{sum}");
+}
+    \end{minted}
+    Output:
+    \pause
+    \vfill
+    \begin{minted}{text}
+6
+    \end{minted}
+    \pause
+    \vfill
+    But there is no auto-dereferencing going on!
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Borrowing/References}
+    We get to the details later (\textit{traits}), but the gist is that Rust offers the following addition functions:
+    \vfill
+    \begin{itemize}
+        \item \texttt{fn add(i32, i32) -> i32}
+        \item \texttt{fn add(i32, \&i32) -> i32}
+        \item \texttt{fn add(\&i32, i32) -> i32}
+        \item \texttt{fn add(\&i32, \&i32) -> i32}
+    \end{itemize}
+    \pause
+    \vfill
+    The functions accepting references dereferences in the function implementation.
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Borrowing/References}
+    \begin{minted}[linenos]{rust}
+fn main() {
+    let a = 3;
+    let b = &&a;
+    let sum = a + b;
+    println!("{sum}");
+}
+    \end{minted}
+    Output:
+    \pause
+    \vfill
+    \begin{minted}{text}
+error[E0277]: cannot add `&&{integer}` to `{integer}`
+ --> src/main.rs:5:17
+  |
+5 |     let sum = a + b;
+  |                 ^ no implementation for `{integer} + &&{integer}`
+  |
+  = help: the trait `Add<&&{integer}>` is not implemented for `{integer}`
+    \end{minted}
+\end{frame}
 \end{document}
