@@ -3449,4 +3449,460 @@ error[E0277]: cannot add `&&{integer}` to `{integer}`
   = help: the trait `Add<&&{integer}>` is not implemented for `{integer}`
     \end{minted}
 \end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Borrowing/References}
+    \begin{minted}[linenos]{rust}
+fn main() {
+    let a = 3;
+    let mut reference = &a;
+    {
+        let b = 5;
+        reference = &b;
+    }
+    println!("{reference}");
+}
+    \end{minted}
+    Output:
+    \pause
+    \vfill
+    Compiler error!
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Borrowing/References}
+    \begin{minted}{text}
+error[E0597]: `b` does not live long enough
+ --> src/main.rs:6:21
+  |
+5 |         let b = 5;
+  |             - binding `b` declared here
+6 |         reference = &b;
+  |                     ^^ borrowed value does not live long enough
+7 |     }
+  |     - `b` dropped here while still borrowed
+8 |     println!("{reference}");
+  |                --------- borrow later used here
+    \end{minted}
+    \pause
+    \vfill
+    The compiler prevents us from causing a use after free.
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Borrowing/References}
+    \begin{minted}[linenos]{rust}
+fn main() {
+    let mut val = 3;
+    let reference = &mut val;
+    *reference = 5;
+    val = 7;
+}
+    \end{minted}
+    Valid?:
+    \pause
+    \vfill
+    Depends on the Rust version and edition.
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Borrowing/References}
+    On Rust 1.30:
+    \vfill
+    \begin{minted}{text}
+error[E0506]: cannot assign to `val` because it is borrowed
+  --> <source>:15:5
+   |
+13 |     let reference = &mut val;
+   |                          --- borrow of `val` occurs here
+14 |     *reference = 5;
+15 |     val = 7;
+   |     ^^^^^^^ assignment to borrowed `val` occurs here
+    \end{minted}
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Borrowing/References}
+    On Rust 1.30: The compiler considers a reference alive until dropped.
+    \vfill
+    \begin{minted}[linenos]{rust}
+fn main() {
+    let mut val = 3;           // ------------+--val
+    let reference = &mut val;  // -+--ref.    |
+    *reference = 5;            //  |          |
+    val = 7;                   //  |          |
+}                              // -+----------+
+    \end{minted}
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Borrowing/References}
+    On Rust 1.63: The compiler considers a reference alive until its last use.
+    \vfill
+    \begin{minted}[linenos]{rust}
+fn main() {
+    let mut val = 3;           // ------------+--val
+    let reference = &mut val;  // -+--ref.    |
+    *reference = 5;            // -+          |
+    val = 7;                   //             |
+}                              // ------------+
+    \end{minted}
+    \pause
+    \vfill
+    \begin{itemize}
+        \item Reasoning about lifetimes locally is straightforward.
+        \item We will see more complexity (when passing references around) on the next slides.
+    \end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Borrowing/References}
+    \begin{itemize}
+        \item The compiler checks functions individually.
+        \item We have learned previously that types of function arguments have to be declared.
+        \pause
+        \item Rust requires function signatures to declare generic lifetime parameters for all references.
+    \end{itemize}
+    \vfill
+    \begin{minted}[linenos]{rust}
+fn add_five<'a>(num: &'a u64) -> u64 {
+    num + 5
+}
+    \end{minted}
+    \pause
+    \begin{minted}[linenos]{rust}
+fn increment<'a>(num: &'a mut u64) {
+    *num += 1;
+}
+    \end{minted}
+    \pause
+    \space
+    Generic lifetime parameters don't do much on their own; they help with how lifetimes of multiple references relate to each other.
+    We need more complex examples.
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Borrowing/References}
+    Local perspective of a function:
+    \vfill
+    \begin{minted}[linenos]{rust}
+fn identity<'a>(reference: &'a u64) -> &'a u64 {
+    reference
+}
+    \end{minted}
+    \pause
+    \vfill
+    \begin{itemize}
+        \item \texttt{'a} is the lifetime of a value.
+        \item \texttt{reference} is a reference to a \texttt{u64} that lives at least as long as \texttt{'a}.
+        \item The return value also is a reference to a \texttt{u64} that lives at least as long as \texttt{'a}.
+    \end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Borrowing/References}
+    Perspective of the function caller:
+    \vfill
+    \begin{minted}[linenos]{rust}
+fn main() {
+    let val = 3;                 // -+-- 'val
+    let ref1 = &val;             //  |
+    let ref2 = identity(ref1);   //  |
+}                                // -+
+    \end{minted}
+    \pause
+    \vfill
+    Assuming we could to \texttt{val}'s lifetimes as \texttt{'val}, you could understand \texttt{identity} like:
+    \begin{minted}[linenos]{rust}
+fn identity(reference: &'val u64) -> &'val u64 {...}
+    \end{minted}
+    \pause
+    \vfill
+    \begin{itemize}
+        \item You could say \texttt{ref2} has the type \texttt{\&'val u64}.
+        \item The compiler can verify that \texttt{ref2} does not outlive the referenced value.
+    \end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Borrowing/References}
+    \begin{minted}[linenos]{rust}
+fn main() {
+    let val1 = 3;                       //
+    let mut reference = &val1;          // 
+    {                                   //
+        let val2 = 5;                   // -+-- 'val2
+        reference = identity(&val2);    //  |
+    }                                   // -+
+    println!("{reference}");            //
+}                                       //
+    \end{minted}
+    \pause
+    \vfill
+    Here, we can understand \texttt{identity} as:
+    \begin{minted}[linenos]{rust}
+fn identity(reference: &'val2 u64) -> &'val2 u64 {...}
+    \end{minted}
+    \pause
+    \vfill
+    The compiler sees the illegal usage of \texttt{reference: \&'val2} in Line 8.
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Borrowing/References}
+    \begin{minted}{text}
+error[E0597]: `val2` does not live long enough
+ --> src/main.rs:6:30
+  |
+5 |         let val2 = 5;                   // -+-- 'val2
+  |             ---- binding `val2` declared here
+6 |         reference = identity(&val2);    //  |
+  |                              ^^^^^ borrowed value does not live
+  |                                    long enough
+7 |     }                                   // -+
+  |     - `val2` dropped here while still borrowed
+8 |     println!("{reference}");            //
+  |                --------- borrow later used here
+    \end{minted}
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Borrowing/References}
+    \begin{itemize}
+        \item The patterns in our examples are straightforward.
+        \item The compiler can infer lifetimes in such cases.
+        \item Leaving out the lifetime parameters is called \textit{lifetime elision}.
+    \end{itemize}
+    \pause
+    \vfill
+    \begin{minted}[linenos]{rust}
+fn add_five<'a>(num: &'a u64) -> u64;
+fn add_five(num: &u64) -> u64;         // lifetime elision
+
+fn increment<'a>(num: &'a mut u64) -> u64;
+fn increment(num: &mut u64);                // lifetime elision
+
+fn identity<'a>(reference: &'a u64) -> &'a u64;
+fn identity(reference: &u64) -> &u64;            // lifetime elision
+    \end{minted}
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Borrowing/References}
+    When a function takes more than two reference arguments and returns a reference, explicit lifetime parameters are required.
+    \pause
+    \vfill
+    \begin{minted}[linenos]{rust}
+fn first<'a, 'b>(fst: &'a u64, _snd: &'b u64) -> &'a u64 {
+    fst
+}
+    \end{minted}
+    \pause
+    \vfill
+    \begin{minted}[linenos]{rust}
+fn second<'a, 'b>(_fst: &'a u64, snd: &'b u64) -> &'b u64 {
+    snd
+}
+    \end{minted}
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Borrowing/References}
+    \begin{minted}[linenos]{rust}
+fn first<'a, 'b>(fst: &'a u64, _snd: &'b u64) -> &'a u64 {...}
+fn main() {
+    let a = 3;
+    let reference = {
+        let b = 5;
+        first(&a, &b)
+    };
+    println!("{reference}");
+}
+    \end{minted}
+    \vfill
+    Output:
+    \pause
+    \begin{minted}{text}
+3
+    \end{minted}
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Borrowing/References}
+    \begin{minted}[linenos]{rust}
+fn second<'a, 'b>(_fst: &'a u64, snd: &'b u64) -> &'b u64 {...}
+fn main() {
+    let a = 3;
+    let reference = {
+        let b = 5;
+        second(&a, &b)
+    };
+    println!("{reference}");
+}
+    \end{minted}
+    \vfill
+    Output:
+    \pause
+    Compiler error!
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Borrowing/References}
+    \begin{minted}{text}
+error[E0597]: `b` does not live long enough
+ --> src/main.rs:6:17
+  |
+4 |     let reference = {
+  |         --------- borrow later stored here
+5 |         let b = 5;
+  |             - binding `b` declared here
+6 |         snd(&a, &b)
+  |                 ^^ borrowed value does not live long enough
+7 |     };
+  |     - `b` dropped here while still borrowed
+    \end{minted}
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Borrowing/References}
+    \begin{minted}[linenos]{rust}
+fn first<'a, 'b>(_fst: &'a u64, snd: &'b u64) -> &'a u64 {
+    snd
+}
+    \end{minted}
+    \vfill
+    Output:
+    \pause
+    Compiler error!
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Borrowing/References}
+    \begin{minted}{text}
+error: lifetime may not live long enough
+ --> src/lib.rs:2:5
+  |
+1 | fn first<'a, 'b>(_fst: &'a u64, snd: &'b u64) -> &'a u64 {
+  |          --  -- lifetime `'b` defined here
+  |          |
+  |          lifetime `'a` defined here
+2 |     snd
+  |     ^^^ function was supposed to return data with lifetime `'a` but it is returning data with lifetime `'b`
+    \end{minted}
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Borrowing/References}
+    \begin{minted}[linenos]{rust}
+fn larger<'a, 'b>(num1: &'a u64, num2: &'b u64) -> &'a u64 {
+    if num1 > num2 {
+        num1
+    } else {
+        num2
+    }
+}
+    \end{minted}
+    \vfill
+    Output:
+    \pause
+    Compiler error!
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Borrowing/References}
+    \begin{minted}{text}
+error: lifetime may not live long enough
+ --> src/lib.rs:5:9
+  |
+1 | fn larger<'a, 'b>(num1: &'a u64, num2: &'b u64) -> &'a u64 {
+  |           --  -- lifetime `'b` defined here
+  |           |
+  |           lifetime `'a` defined here
+...
+5 |         num2
+  |         ^^^^ function was supposed to return data with lifetime `'a`
+  |              but it is returning data with lifetime `'b`
+    \end{minted}
+    \pause
+    \vfill
+    We would have the same issue with returning \texttt{num1} if the return type was  \texttt{\&'b u64}.
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Borrowing/References}
+    The solution:
+    \begin{minted}[linenos]{rust}
+fn larger<'a>(num1: &'a u64, num2: &'a u64) -> &'a u64 {
+    if num1 > num2 {
+        num1
+    } else {
+        num2
+    }
+}
+    \end{minted}
+    \pause
+    \begin{itemize}
+        \item \texttt{num1} and \texttt{num2} both having the lifetime parameter \texttt{'a} does not mean the values they point at live exactly as long as the other.
+        \pause
+        \item It means that that \texttt{num1} and \texttt{num2} live \textbf{at least} as long as \texttt{'a}.
+    \end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Borrowing/References}
+    \begin{minted}[linenos]{rust}
+fn larger<'a>(num1: &'a u64, num2: &'a u64) -> &'a u64 {...}
+fn main() {
+    let val1 = 5;                //            -+-- 'val1
+    let reference = {            //             |
+        let val2 = 3;            // -+-- 'val2  |
+        larger(&val1, &val2)     //  |          |
+    };                           // -+          |
+    println!("{reference}");     //            -+
+}
+    \end{minted}
+    \pause
+    \begin{itemize}
+        \item The compiler chooses the shorter of the two input lifetimes---so \texttt{reference} is basically \texttt{\&'val2 u64}.
+        \pause
+        \item We can see that the code would work (because \texttt{5 > 3}), but the compiler is conservative.
+    \end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Borrowing/References}
+    \begin{minted}{text}
+error[E0597]: `val2` does not live long enough
+  --> src/main.rs:14:23
+   |
+12 |     let reference = {            //             |
+   |         --------- borrow later stored here
+13 |         let val2 = 3;            // -+-- 'val2  |
+   |             ---- binding `val2` declared here
+14 |         larger(&val1, &val2)     //  |          |
+   |                       ^^^^^ borrowed value does not live long enough
+15 |     };                           // -+          |
+   |     - `val2` dropped here while still borrowed
+    \end{minted}
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Borrowing/References}
+    \begin{itemize}
+        \item There is a special lifetime that specifies that a value will live until the end of the program: \texttt{'static}
+        \item The references from constant promotion have this lifetime.
+    \end{itemize}
+    \pause
+    \vfill
+    \begin{minted}[linenos]{rust}
+fn reference_to_three() -> &'static u64 {
+    &3
+}
+fn main() {
+    let ref1 = reference_to_three();
+    let ref2: &'static &'static bool = &&false;
+    let ref3: &'static bool = *ref2;
+}
+    \end{minted}
+\end{frame}
 \end{document}
