@@ -3970,4 +3970,334 @@ fn main() {
     \vfill
     Yes.
 \end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Implementation Blocks}
+    \begin{itemize}
+        \item From object-oriented programming languages, we are used to defining and calling methods on objects/classes.
+        \item Rust also allows the definition of methods and associated functions for types with \texttt{impl} blocks.
+        \pause
+        \vspace{.3cm}
+        \item Constructors are a typical example of associated functions:
+    \end{itemize}
+    \pause
+    \vfill
+    \begin{minted}[linenos]{rust}
+struct Vec2d(f64, f64);
+impl Vec2d {
+    fn new(x: f64, y: f64) -> Vec2d {
+        Vec2d(x, y)
+    }
+    fn default() -> Vec2d {  // reminder: no function overloading
+        Vec2d(0., 0.)
+    }
+}
+    \end{minted}
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Implementation Blocks}
+    \begin{minted}[linenos]{rust}
+struct Vec2d(f64, f64);
+impl Vec2d {
+    fn new(x: f64, y: f64) -> Vec2d {...}
+    fn default() -> Vec2d {...}
+}
+
+fn main() {
+    let zero_vec = Vec2d::default();
+    let custom_vec = Vec2d::new(4., 2.5);
+}
+    \end{minted}
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Implementation Blocks}
+    Replacing the type name with \texttt{Self} within \texttt{impl} blocks is best practice.
+    \vfill
+    \begin{minted}[linenos]{rust}
+struct Vec2d(f64, f64);
+
+impl Vec2d {
+    fn new(x: f64, y: f64) -> Self {
+        Self(x, y)
+    }
+    fn default() -> Vec2d {
+        Self(0., 0.)
+    }
+}
+    \end{minted}
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Implementation Blocks}
+    \begin{minted}[linenos]{rust}
+struct Vec2d(f64, f64);
+
+impl Vec2d {
+    fn scale(self: &mut Self, scale: f64) {
+        self.0 *= scale;
+        self.1 *= scale;
+    }
+}
+    \end{minted}
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Implementation Blocks}
+    \begin{minted}[linenos]{rust}
+#[derive(Debug)]
+struct Vec2d(f64, f64);
+impl Vec2d {
+    ...
+    fn scale(self: &mut Self, scale: f64) {...}
+}
+
+fn main() {
+    let mut vec = Vec2d::new(4., 2.5);
+    Vec2d::scale(&mut vec, 2.);
+    println!("{:?}", vec);
+}
+    \end{minted}
+    \pause
+    \vfill
+    Output:
+    \begin{minted}{text}
+Vec2d(8.0, 5.0)
+    \end{minted}
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Implementation Blocks}
+    \begin{minted}[linenos]{rust}
+#[derive(Debug)]
+struct Vec2d(f64, f64);
+impl Vec2d {
+    ...
+    fn scale(self: &mut Self, scale: f64) {...}
+}
+
+fn main() {
+    let mut vec = Vec2d::new(4., 2.5);
+    vec.scale(2.);
+    println!("{:?}", vec);
+}
+    \end{minted}
+    \pause
+    \vfill
+    Output:
+    \begin{minted}{text}
+Vec2d(8.0, 5.0)
+    \end{minted}
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Implementation Blocks}
+    A associated function becomes a method when the first parameter is called \texttt{self} and has one of the types:
+    \begin{itemize}
+        \item \texttt{Self}
+        \item \texttt{\&Self}
+        \item \texttt{\&mut Self}
+    \end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Implementation Blocks}
+    \begin{minted}[linenos]{rust}
+impl Vec2d {
+    fn scale(self: &mut Self, scale: f64) {
+        self.0 *= scale;
+        self.1 *= scale;
+    }
+}
+    \end{minted}
+    \pause
+    \vfill
+    Rust offers special syntax to make method signatures more ergonomic.
+    \begin{minted}[linenos]{rust}
+impl Vec2d {
+    fn scale(&mut self, scale: f64) {
+        self.0 *= scale;
+        self.1 *= scale;
+    }
+}
+    \end{minted}
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Implementation Blocks}
+    \begin{minted}[linenos]{rust}
+impl Vec2d {
+    fn length(self: &Self) -> f64 {
+        // We make use of the methods f64::powi and f64::sqrt
+        let Self(x, y) = self;
+        let length_squared = x.powi(2) + y.powi(2);
+        length_squared.sqrt()
+    }
+}
+    \end{minted}
+    \pause
+    \vfill
+    Shortened:
+    \begin{minted}[linenos]{rust}
+impl Vec2d {
+    fn length(&self) -> f64 {
+    ...
+    \end{minted}
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Implementation Blocks}
+    \begin{minted}[linenos]{rust}
+impl Vec2d {
+    fn to_tuple(self: Self) -> (f64, f64) {
+        (self.0, self.1)
+    }
+}
+    \end{minted}
+    \pause
+    \vfill
+    Shortened:
+    \begin{minted}[linenos]{rust}
+impl Vec2d {
+    fn to_tuple(self) -> (f64, f64) {
+        (self.0, self.1)
+    }
+}
+    \end{minted}
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Implementation Blocks}
+    \begin{minted}[linenos]{rust}
+#[derive(Debug)]
+struct Vec2d(f64, f64);
+impl Vec2d {
+    fn new(x: f64, y: f64) -> Self { ... }
+    fn scale(&mut self) { ... }
+    fn to_tuple(self) -> (f64, f64) { ... }
+}
+fn main() {
+    let mut vec = Vec2d::new(4., 2.5);
+    vec.scale(2.);
+    let (x, y) = vec.to_tuple();
+    println!("{vec:?} {x} {y}");
+}
+    \end{minted}
+    \pause
+    \vfill
+    Output:
+    \pause
+    Compiler error.
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Implementation Blocks}
+    \begin{minted}[fontsize=\small]{text}
+error[E0382]: borrow of moved value: `vec`
+  --> src/main.rs:33:16
+   |
+30 |     let mut vec = Vec2d::new(4., 2.5);
+   |         ------- move occurs because `vec` has type `Vec2d`, which does not
+   |                 implement the `Copy` trait
+31 |     vec.scale(2.);
+32 |     let (x, y) = vec.to_tuple();
+   |                      ---------- `vec` moved due to this method call
+33 |     println!("{vec:?} {x} {y}");
+   |                ^^^ value borrowed here after move
+   |
+note: `Vec2d::to_tuple` takes ownership of the receiver `self`, which moves `vec`
+  --> src/main.rs:23:17
+   |
+23 |     fn to_tuple(self) -> (f64, f64) {
+   |                 ^^^^
+    \end{minted}
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Implementation Blocks}
+    \begin{minted}[linenos]{rust}
+struct Vec2d(f64, f64);
+impl Vec2d {
+    fn new(x: f64, y: f64) -> Self { ... }
+    fn scale(&mut self) { ... }
+    fn length(&self) -> f64 { ... }
+}
+fn main() {
+    let mut vec = Vec2d::new(3., 0.);
+    vec.scale(2.);
+    println!("{}", vec.length());
+}
+    \end{minted}
+    \pause
+    \vfill
+    Output:
+    \pause
+    \begin{minted}{text}
+6
+    \end{minted}
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Implementation Blocks}
+    \begin{minted}[linenos]{rust}
+fn main() {
+    let mut vec = Vec2d::new(3., 0.);
+    vec.scale(2.);
+    println!("{}", vec.length());
+}
+    \end{minted}
+    \vfill
+    For method calls, the compiler automatically creates the necessary references (\textit{autoref}).
+    \pause
+    \vfill
+    \begin{minted}[linenos]{rust}
+fn main() {
+    let mut vec = Vec2d::new(3., 0.);
+    (&mut vec).scale(2.);
+    println!("{}", (&vec).length());
+}
+    \end{minted}
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Implementation Blocks}
+    \begin{minted}[linenos]{rust}
+struct Vec2d(f64, f64);
+impl Vec2d {
+    fn new(x: f64, y: f64) -> Self { ... }
+    fn scale(&mut self) { ... }
+    fn length(&self) -> f64 { ... }
+}
+fn func(deep_vec_ref: &&&Vec2d) {
+    let length = deep_vec_ref.length();
+    println!("{length}");
+}
+    \end{minted}
+    \pause
+    \vfill
+    Valid?
+    \pause
+    Yes.
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Implementation Blocks}
+    \begin{minted}[linenos]{rust}
+fn func(deep_vec_ref: &&&Vec2d) {
+    let length = deep_vec_ref.length();
+    println!("{length}");
+}
+    \end{minted}
+    \vfill
+    The compiler can also automatically dereference (\textit{autoderef}).
+    \pause
+    \vfill
+    \begin{minted}[linenos]{rust}
+fn func(deep_vec_ref: &&&Vec2d) {
+    let length = (**deep_vec_ref).length();
+    println!("{length}");
+}
+    \end{minted}
+\end{frame}
 \end{document}
