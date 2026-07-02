@@ -3905,4 +3905,69 @@ fn main() {
 }
     \end{minted}
 \end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Borrowing/References}
+    \begin{minted}[linenos]{rust}
+struct Stack {
+    top: usize,
+    data: &[u64; 10],
+}
+
+fn main() {
+    let data = [0; 10];
+    let stack = Stack {
+        top: 0,
+        data: &data,
+    };
+}
+    \end{minted}
+    Valid?
+    \pause
+    \vfill
+    Compiler error.
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Borrowing/References}
+    \begin{minted}{text}
+error[E0106]: missing lifetime specifier
+ --> src/main.rs:3:11
+  |
+3 |     data: &[u64; 10],
+  |           ^ expected named lifetime parameter
+  |
+help: consider introducing a named lifetime parameter
+  |
+1 ~ struct Stack<'a> {
+2 |     top: usize,
+3 ~     data: &'a [u64; 10],
+  |
+    \end{minted}
+    \pause
+    \vfill
+    \texttt{struct}s and \texttt{enum}s must be transparent about the lifetimes of the references they store.
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Borrowing/References}
+    \begin{minted}[linenos]{rust}
+struct Stack<'a> {
+    top: usize,
+    data: &'a [u64; 10],
+}
+
+fn main() {
+    let data = [0; 10];
+    let stack = Stack {
+        top: 0,
+        data: &data,
+    };
+}
+    \end{minted}
+    Valid?
+    \pause
+    \vfill
+    Yes.
+\end{frame}
 \end{document}
