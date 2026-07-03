@@ -4427,7 +4427,7 @@ impl Option<u64> {
     \pause
     \vfill
     \begin{minted}[linenos]{rust}
-fn array_safe_get<T>(array: [T; 20], index: usize) -> Option<T> {
+fn array_checked_get<T>(array: [T; 20], index: usize) -> Option<T> {
     if index >= 20 {
         return Option::None;
     }
@@ -4443,7 +4443,7 @@ fn array_safe_get<T>(array: [T; 20], index: usize) -> Option<T> {
     \pause
     \vfill
     \begin{minted}[linenos]{rust}
-fn array_safe_get<T, const N: usize>(array: &[T; N], index: usize) -> Option<&T> {
+fn array_checked_get<T, const N: usize>(array: &[T; N], index: usize) -> Option<&T> {
     if index >= N {
         return Option::None;
     }
@@ -4483,7 +4483,7 @@ fn main() {
         \item The standard library implements a lot of useful functions for \texttt{Option}, such as \texttt{unwrap\_or}.
         \pause
         \vspace{.3cm}
-        \item The functionality of our \texttt{array\_safe\_get} function is available through the \texttt{get} method on arrays.
+        \item The functionality of our \texttt{array\_checked\_get} function is available through the \texttt{get} method on arrays.
     \end{itemize}
     \pause
     \vfill
