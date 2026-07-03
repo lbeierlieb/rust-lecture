@@ -4443,7 +4443,8 @@ fn array_checked_get<T>(array: [T; 20], index: usize) -> Option<T> {
     \pause
     \vfill
     \begin{minted}[linenos]{rust}
-fn array_checked_get<T, const N: usize>(array: &[T; N], index: usize) -> Option<&T> {
+fn array_checked_get<T, const N: usize>(array: &[T; N], index: usize)
+ -> Option<&T> {
     if index >= N {
         return Option::None;
     }
