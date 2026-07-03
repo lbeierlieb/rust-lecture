@@ -4414,7 +4414,7 @@ enum Option<T> {
 }
 
 impl Option<u64> {
-    fn unwrap_or_zero(self) -> T {
+    fn unwrap_or_zero(self) -> u64 {
         self.unwrap_or(0)
     }
 }
