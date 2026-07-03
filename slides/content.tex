@@ -4473,4 +4473,101 @@ fn main() {
     \end{itemize}
 \end{frame}
 
+\begin{frame}[fragile]
+    \frametitle{\texttt{Option} in the standard library}
+    \begin{itemize}
+        \item The \texttt{Option} type is Rust's way to express the absense of values.
+        \pause
+        \item \texttt{Option} is used so frequently that it is part of the standard library and standard prelude (i.e., available without import statements).
+        \item The values \texttt{Some} and \texttt{None} are also part of the prelude---no need to prepend \texttt{Option::}.
+        \item The standard library implements a lot of useful functions for \texttt{Option}, such as \texttt{unwrap\_or}.
+        \pause
+        \vspace{.3cm}
+        \item The functionality of our \texttt{array\_safe\_get} function is available through the \texttt{get} method on arrays.
+    \end{itemize}
+    \pause
+    \vfill
+    \begin{minted}[linenos]{rust}
+fn main () {
+    match [true; 10].get(3) {
+        Some(val) => println!("{val}"),
+        None => {}
+    }
+}
+    \end{minted}
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{\texttt{Option} in the standard library}
+    \begin{minted}[linenos,fontsize=\small]{rust}
+fn func<const N: usize>(array: [Option<u64>; N], index: usize, dividend: u64)
+ -> Option<u64> {
+    let elem = match array.get(index) {
+        Some(elem) => elem,
+        None => return None,
+    };
+    let inner = match elem {
+        Some(inner) => inner,
+        None => return None,
+    };
+    // u64::safe_div(&self, v: &Self) -> Option<u64>
+    let div_result = match dividend.checked_div(*inner) {
+        Some(result) => result,
+        None => return None,
+    };
+    Some(div_result)
+}
+    \end{minted}
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{\texttt{Option} in the standard library}
+    We have to explicitly handle
+    \begin{itemize}
+        \item array index out of bounds
+        \item array element is None
+        \item division is invalid (divisor is zero, over-, underflow)
+    \end{itemize}
+    \pause
+    \vfill
+    But the code is really verbose and repetitive.
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{\texttt{Option} in the standard library}
+    \begin{itemize}
+        \item You can use the \texttt{?} operator on \texttt{Option} values in function that return an \texttt{Option}.
+        \item The operator either unwraps the inner value or returns \texttt{None}.
+    \end{itemize}
+    \pause
+    \vfill
+    \begin{minted}[linenos,fontsize=\small]{rust}
+fn func<const N: usize>(array: [Option<u64>; N], index: usize, dividend: u64)
+ -> Option<u64> {
+    let elem = array.get(index)?;
+    let inner = elem?;
+    let div_result = dividend.safe_div(inner)?;
+    Some(div_result)
+}
+    \end{minted}
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{\texttt{Option} in the standard library}
+    Same code, more concise. We do not need to de- and reconstruct the last \texttt{Option}.
+    \vfill
+    \begin{minted}[linenos,fontsize=\small]{rust}
+fn func<const N: usize>(array: [Option<u64>; N], index: usize, dividend: u64)
+ -> Option<u64> {
+    let divisor = array.get(index)??;
+    dividend.safe_div(divisor)
+}
+    \end{minted}
+    \pause
+    \vfill
+    \begin{itemize}
+        \item Now the code almost looks like we ignore that values could be missing.
+        \item The compiler will complain if we would actually ignore.
+    \end{itemize}
+\end{frame}
 \end{document}
