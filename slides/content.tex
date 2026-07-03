@@ -4300,4 +4300,177 @@ fn func(deep_vec_ref: &&&Vec2d) {
 }
     \end{minted}
 \end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Generics}
+    \begin{itemize}
+        \item You might already generics from Java, C++, Python typ hints, \ldots
+        \item Let us design investigate with a few examples.
+    \end{itemize}
+    \pause
+    \vfill
+    \begin{minted}[linenos]{rust}
+enum Option<T> {
+    Some(T),
+    None,
+}
+
+fn main() {
+    let maybe_int: Option<i32> = Option::Some(3);
+    let nested: Option<Option<i32>> = Option::Some(Option::Some(3));
+    let maybe_float = Option::Some(4.5);  // type inference
+}
+    \end{minted}
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Generics}
+    \begin{minted}[linenos]{rust}
+enum Option<T> {
+    Some(T),
+    None,
+}
+
+fn main() {
+    let option1 = Option::Some(false);
+    let option2 = Option::None;
+    let option3 = Option::Some(3);
+}
+    \end{minted}
+    \vfill
+    Valid?
+    \pause
+    \vfill
+    Compiler error.
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Generics}
+    \begin{minted}{text}
+error[E0282]: type annotations needed for `Option<_>`
+ --> src/main.rs:9:9
+  |
+9 |     let option2 = Option::None;
+  |         ^^^^^^^   ------------ type must be known at this point
+  |
+help: consider giving `option2` an explicit type, where the type for type parameter `T` is specified
+  |
+9 |     let option2: Option<T> = Option::None;
+  |                +++++++++++
+    \end{minted}
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Generics}
+    \begin{minted}[linenos]{rust}
+enum Option<T> {
+    Some(T),
+    None,
+}
+fn main() {
+    let option = Option::None;
+    do_something(&option);
+}
+fn do_something(opt: &Option<u64>) { ... }
+    \end{minted}
+    \vfill
+    Valid?
+    \pause
+    \vfill
+    Yes! The compiler can infer the type from the function call.
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Generics}
+    The \texttt{impl} block has to introduce the generic and can then use the generic parameter in the type and the methods and functions.
+    \pause
+    \vfill
+    \begin{minted}[linenos]{rust}
+enum Option<T> {
+    Some(T),
+    None,
+}
+
+impl<T> Option<T> {
+    fn unwrap_or(self, default: T) -> T {
+        match self {
+            Option::Some(t) => t,
+            Option::None => default,
+        }
+    }
+}
+    \end{minted}
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Generics}
+    You can choose to implement methods only for specific types.
+    \pause
+    \vfill
+    \begin{minted}[linenos]{rust}
+enum Option<T> {
+    Some(T),
+    None,
+}
+
+impl Option<u64> {
+    fn unwrap_or_zero(self) -> T {
+        self.unwrap_or(0)
+    }
+}
+    \end{minted}
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Generics}
+    You can also introduce generics in individual functions.
+    \pause
+    \vfill
+    \begin{minted}[linenos]{rust}
+fn array_safe_get<T>(array: [T; 20], index: usize) -> Option<T> {
+    if index >= 20 {
+        return Option::None;
+    }
+
+    Option::Some(array[index])
+}
+    \end{minted}
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Generics}
+    Apart from generic lifetime and type parameters, Rust also supports generic const parameters.
+    \pause
+    \vfill
+    \begin{minted}[linenos]{rust}
+fn array_safe_get<T, const N: usize>(array: &[T; N], index: usize) -> Option<&T> {
+    if index >= N {
+        return Option::None;
+    }
+
+    Option::Some(&array[index])
+}
+    \end{minted}
+    \pause
+    \vfill
+    You can currently only use the integer types, \texttt{char}, and \texttt{bool} as generic consts.
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Generics}
+    \begin{minted}[linenos]{rust}
+fn main() {
+    let option1 = Option::Some(3);
+    let option2: Option<bool> = None;
+    let option3 = Option::Some(4.5);
+}
+    \end{minted}
+    \pause
+    \vfill
+    \begin{itemize}
+        \item There is no runtime cost for generics.
+        \item The compiler performs \textit{monomorphization}: It generates the non-generic types \texttt{Option<i32>}, \texttt{Option<bool>}, and \texttt{Option<f64>}.
+    \end{itemize}
+\end{frame}
+
 \end{document}
