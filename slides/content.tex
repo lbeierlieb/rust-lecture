@@ -3910,14 +3910,14 @@ fn main() {
     \begin{minted}[linenos]{rust}
 struct Stack {
     top: usize,
-    data: &[u64; 10],
+    data: &mut [u64; 10],
 }
 
 fn main() {
-    let data = [0; 10];
+    let mut data = [0; 10];
     let stack = Stack {
         top: 0,
-        data: &data,
+        data: &mut data,
     };
 }
     \end{minted}
@@ -3933,14 +3933,14 @@ fn main() {
 error[E0106]: missing lifetime specifier
  --> src/main.rs:3:11
   |
-3 |     data: &[u64; 10],
+3 |     data: &mut [u64; 10],
   |           ^ expected named lifetime parameter
   |
 help: consider introducing a named lifetime parameter
   |
 1 ~ struct Stack<'a> {
 2 |     top: usize,
-3 ~     data: &'a [u64; 10],
+3 ~     data: &'a mut [u64; 10],
   |
     \end{minted}
     \pause
@@ -3953,14 +3953,14 @@ help: consider introducing a named lifetime parameter
     \begin{minted}[linenos]{rust}
 struct Stack<'a> {
     top: usize,
-    data: &'a [u64; 10],
+    data: &'a mut [u64; 10],
 }
 
 fn main() {
-    let data = [0; 10];
+    let mut data = [0; 10];
     let stack = Stack {
         top: 0,
-        data: &data,
+        data: &mut data,
     };
 }
     \end{minted}
