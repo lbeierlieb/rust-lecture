@@ -3610,7 +3610,7 @@ fn main() {
     \end{minted}
     \pause
     \vfill
-    Assuming we could to \texttt{val}'s lifetimes as \texttt{'val}, you could understand \texttt{identity} like:
+    Assuming we refer to \texttt{val}'s lifetimes as \texttt{'val}, you could understand \texttt{identity} like:
     \begin{minted}[linenos]{rust}
 fn identity(reference: &'val u64) -> &'val u64 {...}
     \end{minted}
