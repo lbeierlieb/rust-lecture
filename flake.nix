@@ -37,7 +37,7 @@
             }
           );
 
-        week1 = buildCargoProject ./exercises/week1/zombiesim;
+        zombiesim = buildCargoProject ./exercises/week2/zombiesim;
 
         slides = pkgs.stdenv.mkDerivation {
           pname = "rust-lecture-slides";
@@ -83,7 +83,7 @@
       {
         packages = {
           inherit
-            week1
+            zombiesim
             slides
             slides-animated
             slides-all
