@@ -4462,7 +4462,7 @@ fn array_checked_get<T, const N: usize>(array: &[T; N], index: usize)
     \begin{minted}[linenos]{rust}
 fn main() {
     let option1 = Option::Some(3);
-    let option2: Option<bool> = None;
+    let option2: Option<bool> = Option::None;
     let option3 = Option::Some(4.5);
 }
     \end{minted}
