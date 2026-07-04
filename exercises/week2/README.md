@@ -1,4 +1,4 @@
-# Week 1 Exercise: Zombie Infection Simulation
+# Week 2 Exercise: Zombie Infection Simulation
 
 Watch this [YouTube video](https://www.youtube.com/watch?v=g-g-NdyYwsY) for nice visualizations and explanations about the simulation this exercise aims to implement.
 Short summary: The world is a grid of cells.
