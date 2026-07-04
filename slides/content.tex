@@ -4634,7 +4634,7 @@ fn execute_instruction(mut cpu: Cpu, instruction: Instruction)
             }
             cpu.data[cpu.stackpointer] = val;
             cpu.stackpointer += 1;
-            Ok(cpu)
+            Ok(cpu, None)
         }
     ...
 }
