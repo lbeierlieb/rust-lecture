@@ -2457,7 +2457,7 @@ fn func(wrapped: WrappedI32) -> WrappedI32 {
         \item Types have to be especially marked to be safe for copying.
         \pause
         \vspace{.3cm}
-        \item Primitives types are copyable.
+        \item Primitive types are copyable.
         \item Arrays and tuples containing only copyable types are copyable.
         \pause
         \vspace{.3cm}
@@ -2484,6 +2484,2643 @@ fn main() {
     Output:
     \begin{minted}{text}
 x = WrappedI32(13), y = WrappedI32(3)
+    \end{minted}
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Borrowing/References}
+    Passing ownership to everywhere where you need the value is inconvenient.
+    \pause
+    \begin{itemize}
+        \item Returning ownership in return value is annoying, especially with multiple values.
+        \item Bitwise copies become more expensive with larger types.
+        \pause
+        \vspace{.3cm}
+        \item You can create references to values.
+        \item This process is called \textit{borrowing}.
+    \end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Borrowing/References}
+    \begin{minted}[linenos]{rust}
+fn main() {
+    let number = 3;
+    let reference: &i32 = &number;
+    let another_ref = &number;  // type inference works for references
+    let ref_ref: &&i32 = &reference;
+    let another_ref_ref = &reference;
+}
+    \end{minted}
+    \pause
+    \vfill
+    Let us look at printing references, so that we can inspect more closely. 
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Borrowing/References}
+    \begin{minted}[linenos]{rust}
+fn main() {
+    let number = 3;
+    let reference = &number;
+    let ref_ref = &reference;
+
+    println!("{number} {reference} {ref_ref}");
+}
+    \end{minted}
+    \pause
+    \vfill
+    Output:
+    \pause
+    \begin{minted}{text}
+3 3 3
+    \end{minted}
+    \pause
+    \vfill
+    The default formatter for references prints the referenced value.
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Borrowing/References}
+    \begin{minted}[linenos]{rust}
+fn main() {
+    let number = 3;
+    let reference = &number;
+    let ref_ref = &reference;
+
+    println!("{number} {ref:p} {ref_ref:p} {:p}", &ref_ref);
+}
+    \end{minted}
+    \pause
+    \vfill
+    Output (non-deterministic due to address space layout randomization (ASLR)):
+    \begin{minted}{text}
+3 0x7ffc8c0148ac 0x7ffc8c0148b0 0x7ffc8c0148b8
+    \end{minted}
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Borrowing/References}
+    \begin{center}
+        \begin{tikzpicture}
+            \node[above] at (1.75, 0) {stack};
+            \drawbox{0}{-0.0}{3.5}{0.5}{\ldots}
+            \drawbox{0}{-0.5}{3.5}{1}{saved RBP}
+            \drawbox{0}{-1.5}{3.5}{1}{\texttt{ref\_ref}}
+            \drawbox{0}{-2.5}{3.5}{1}{\texttt{reference}}
+            \drawbox{0}{-3.5}{3.5}{0.5}{\texttt{number}: 3}
+            \draw[->, dotted] (1.75,-4) -- (1.75,-4.5);
+            \draw[->] (2.8,-2) -- (4.5,-2) -- (4.5, -3.5) -- (3.55, -3.5);
+            \draw[->, dashed] (2.8,-3) -- (4,-3) -- (4, -4) -- (3.55, -4);
+            \node[left,font=\small] at (0, -2.5) {\texttt{0x7ffc8c0148b8}};
+            \node[left,font=\small] at (0, -3.5) {\texttt{0x7ffc8c0148b0}};
+            \node[left,font=\small] at (0, -4) {\texttt{0x7ffc8c0148ac}};
+        \end{tikzpicture}
+    \end{center}
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Borrowing/References}
+    \begin{minted}[linenos]{rust}
+fn main() {
+    let number = 3;
+    let reference = &number;
+    let ref_ref = &&number;
+    let dereferenced_num: i32 = *reference;
+    let one_step_deref: &i32 = *ref_ref;  
+    let double_deref: i32 = **ref_ref;
+}
+    \end{minted}
+    \vfill
+    Type inference could infer all the explicit type declarations above.
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Borrowing/References}
+    \begin{minted}[linenos]{rust}
+struct NonCopyStruct(u64);
+
+fn main() {
+    let val = NonCopyStruct(3);
+    let reference = &val;
+    let deref = *reference;
+}
+    \end{minted}
+    \pause
+    \vfill
+    Output:
+    \pause
+    Compiler error!
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Borrowing/References}
+    \begin{minted}{text}
+error[E0507]: cannot move out of `*reference` which is behind a
+shared reference
+ --> src/main.rs:6:17
+  |
+6 |     let deref = *reference;
+  |                 ^^^^^^^^^^ move occurs because `*reference` has
+  |                            type `NonCopyStruct`, which does not
+  |                            implement the `Copy` trait
+    \end{minted}
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Borrowing/References}
+    \begin{minted}[linenos]{rust}
+struct NonCopyStruct(u64);
+
+fn main() {
+    let val = NonCopyStruct(3);
+    let reference = &val;
+    let field = reference.0;
+}
+    \end{minted}
+    \pause
+    \vfill
+    Valid?
+    \pause
+    \vfill
+    \begin{itemize}
+        \item Yes!
+        \pause
+        \item Field access auto-dereferences: \texttt{(*reference).0}
+        \item Also works for double, triple, quadruple, \ldots references.
+    \end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Borrowing/References}
+    \begin{minted}[linenos]{rust}
+struct NonCopyStruct(u64);
+
+fn main() {
+    let val = NonCopyStruct(3);
+    let reference = &val;
+    reference.0 = 5;
+}
+    \end{minted}
+    \pause
+    \vfill
+    Valid?
+    \pause
+    \vfill
+    \begin{itemize}
+        \item Compiler error.
+        \item \texttt{val} is immutable. The compiler guarantees the value will not change.
+    \end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Borrowing/References}
+    \begin{minted}{text}
+error[E0594]: cannot assign to `reference.0`, which is behind
+a `&` reference
+ --> src/main.rs:6:5
+  |
+6 |     reference.0 = 5;
+  |     ^^^^^^^^^^^^^^^ `reference` is a `&` reference, so it
+  |                     cannot be written to
+  |
+help: consider changing this to be a mutable reference
+  |
+5 |     let reference = &mut val;
+  |                      +++
+    \end{minted}
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Borrowing/References}
+    \begin{minted}[linenos]{rust}
+struct NonCopyStruct(u64);
+
+fn main() {
+    let val = NonCopyStruct(3);
+    let reference = &mut val;
+    reference.0 = 5;
+}
+    \end{minted}
+    \pause
+    \vfill
+    Now valid?
+    \pause
+    \vfill
+    Still not.
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Borrowing/References}
+    \begin{minted}{text}
+error[E0596]: cannot borrow `val` as mutable, as it is not
+declared as mutable
+ --> src/main.rs:5:21
+  |
+5 |     let reference = &mut val;
+  |                     ^^^^^^^^ cannot borrow as mutable
+  |
+help: consider changing this to be mutable
+  |
+4 |     let mut val = NonCopyStruct(3);
+  |         +++
+    \end{minted}
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Borrowing/References}
+    \begin{minted}[linenos]{rust}
+struct NonCopyStruct(u64);
+
+fn main() {
+    let mut val = NonCopyStruct(3);
+    let reference = &mut val;
+    reference.0 = 5;
+}
+    \end{minted}
+    \pause
+    \vfill
+    Valid?
+    \pause
+    \vfill
+    \begin{itemize}
+        \item Yes!
+        \pause
+        \item Usage rules differ significantly between immutable and mutable references. Coming up!
+    \end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Borrowing/References}
+    \begin{minted}[linenos]{rust}
+fn main() {
+    let val = 3;
+    let ref1 = &val;
+    let ref2 = &val;
+    let ref3 = ref2;
+
+    println!("{val} {ref1} {ref2} {ref3}");
+}
+    \end{minted}
+    \pause
+    \vfill
+    Output:
+    \pause
+    \vfill
+    \begin{minted}{text}
+3 3 3 3
+    \end{minted}
+    \pause
+    \vfill
+    You can have multiple immutable references to same data.
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Borrowing/References}
+    \begin{minted}[linenos]{rust}
+fn main() {
+    let mut val = 3;
+    let ref1 = &val;
+    let ref2 = &val;
+    let ref3 = ref2;
+
+    println!("{val} {ref1} {ref2} {ref3}");
+}
+    \end{minted}
+    \pause
+    \vfill
+    Output:
+    \pause
+    \vfill
+    \begin{minted}{text}
+3 3 3 3
+    \end{minted}
+    \pause
+    \vfill
+    The compiler warns that the \texttt{mut} is unnecessary.
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Borrowing/References}
+    \begin{minted}[linenos]{rust}
+fn main() {
+    let mut val = 3;
+    let ref1 = &val;
+    val = 5;
+
+    println!("{val} {ref1}");
+}
+    \end{minted}
+    \pause
+    \vfill
+    Output:
+    \pause
+    \vfill
+    Compiler error!
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Borrowing/References}
+    \begin{minted}{text}
+error[E0506]: cannot assign to `val` because it is borrowed
+ --> src/main.rs:4:5
+  |
+3 |     let ref1 = &val;
+  |                ---- `val` is borrowed here
+4 |     val = 5;
+  |     ^^^^^^^ `val` is assigned to here but it was already borrowed
+5 |
+6 |     println!("{val} {ref1}");
+  |                      ---- borrow later used here
+    \end{minted}
+    \pause
+    \vfill
+    \begin{itemize}
+        \item The owner must not modify the value while references exist.
+        \pause
+        \item If you have an immutable reference, the compiler guarantees that the value will not change.
+    \end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Borrowing/References}
+    \begin{minted}[linenos]{rust}
+fn main() {
+    let mut val = 3;
+    let ref1 = &mut val;
+    let ref2 = &mut val;
+
+    println!("{val} {ref1} {ref2}");
+}
+    \end{minted}
+    \vfill
+    Output:
+    \pause
+    \vfill
+    Compiler error!
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Borrowing/References}
+    \begin{minted}{text}
+error[E0499]: cannot borrow `val` as mutable more than once at a time
+ --> src/main.rs:4:16
+  |
+3 |     let ref1 = &mut val;
+  |                -------- first mutable borrow occurs here
+4 |     let ref2 = &mut val;
+  |                ^^^^^^^^ second mutable borrow occurs here
+5 |
+6 |     println!("{val} {ref1} {ref2}");
+  |                      ---- first borrow later used here
+    \end{minted}
+    \pause
+    \vfill
+    There cannot be multiple mutable borrows.
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Borrowing/References}
+    \begin{minted}[linenos]{rust}
+fn main() {
+    let mut val = 3;
+    let ref1 = &mut val;
+    let ref2 = &val;
+
+    println!("{val} {ref1} {ref2}");
+}
+    \end{minted}
+    \vfill
+    Output:
+    \pause
+    \vfill
+    Compiler error!
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Borrowing/References}
+    \begin{minted}{text}
+error[E0502]: cannot borrow `val` as immutable because it is also
+borrowed as mutable
+ --> src/main.rs:4:16
+  |
+3 |     let ref1 = &mut val;
+  |                -------- mutable borrow occurs here
+4 |     let ref2 = &val;
+  |                ^^^^ immutable borrow occurs here
+5 |
+6 |     println!("{val} {ref1} {ref2}");
+  |                      ---- mutable borrow later used here
+    \end{minted}
+    \pause
+    \vfill
+    You can have either one mutable reference or immutable references.
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Borrowing/References}
+    \begin{minted}[linenos]{rust}
+fn main() {
+    let mut val = 3;
+    let ref1 = &mut val;
+    let ref2 = ref1;
+
+    println!("{val} {ref1} {ref2}");
+}
+    \end{minted}
+    \vfill
+    Output:
+    \pause
+    \vfill
+    Compiler error. But not because of multiple mutable references.
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Borrowing/References}
+    \begin{minted}{text}
+error[E0382]: borrow of moved value: `ref1`
+ --> src/main.rs:6:22
+  |
+3 |     let ref1 = &mut val;
+  |         ---- move occurs because `ref1` has type `&mut i32`,
+  |              which does not implement the `Copy` trait
+4 |     let ref2 = ref1;
+  |                ---- value moved here
+5 |
+6 |     println!("{val} {ref1} {ref2}");
+  |                      ^^^^ value borrowed here after move
+    \end{minted}
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Borrowing/References}
+    \begin{itemize}
+        \item \texttt{\&} and \texttt{\&mut} are a great example for copyable and non-copyable types.
+        \item References borrow access to a value, but they are values with owners themselves.
+        \item Both kind of reference are just pointers---just 64-bit addresses.\footnote{References can have additional data; we'll discover later.}
+        \pause
+        \item Multiple immutable references to the same value can exist: Copying is safe.
+        \pause
+        \item There can only be a single mutable reference. Copying would create a second mutable reference.
+    \end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Borrowing/References}
+    \begin{minted}[linenos]{rust}
+fn main() {
+    let mut val = 3;
+    let ref1 = &mut val;
+
+    println!("{val} {ref1}");
+}
+    \end{minted}
+    \vfill
+    Output:
+    \pause
+    \vfill
+    Compiler error.
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Borrowing/References}
+    \begin{minted}{text}
+error[E0502]: cannot borrow `val` as immutable because it is also borrowed as mutable
+ --> src/main.rs:5:16
+  |
+3 |     let ref1 = &mut val;
+  |                -------- mutable borrow occurs here
+4 |
+5 |     println!("{val} {ref1}");
+  |                ^^^   ---- mutable borrow later used here
+  |                |
+  |                immutable borrow occurs here
+    \end{minted}
+    \pause
+    \vfill
+    \begin{itemize}
+        \item The same error, in disguise.
+        \item The \texttt{println!} macro creates an immutable reference.
+    \end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Borrowing/References}
+    \begin{minted}[linenos]{rust}
+fn main() {
+    let mut val = 3;
+    let ref1 = &mut val;
+
+    println!("{ref1}");
+}
+    \end{minted}
+    \vfill
+    Output:
+    \pause
+    \vfill
+    \begin{minted}{text}
+3
+    \end{minted}
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Borrowing/References}
+    While an immutable reference existed, we could not modify the value.
+    \vfill
+    \begin{minted}[linenos]{rust}
+fn main() {
+    let mut val = 3;
+    let ref1 = &mut val;
+
+    val = 5;
+
+    println!("{ref1}");
+}
+    \end{minted}
+    \vfill
+    Output:
+    \pause
+    \vfill
+    Compiler error.
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Borrowing/References}
+    \begin{minted}{text}
+error[E0506]: cannot assign to `val` because it is borrowed
+ --> src/main.rs:5:5
+  |
+3 |     let ref1 = &mut val;
+  |                -------- `val` is borrowed here
+4 |
+5 |     val = 5;
+  |     ^^^^^^^ `val` is assigned to here but it was already borrowed
+6 |
+7 |     println!("{ref1}");
+  |                ---- borrow later used here
+    \end{minted}
+    \pause
+    \vfill
+    The owner must never modify the value while references exist.
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Borrowing/References}
+    \begin{minted}[linenos]{rust}
+fn main() {
+    let mut val = 3;
+    let ref1 = &mut val;
+
+    let copied_val = val;
+
+    println!("{ref1}");
+}
+    \end{minted}
+    \vfill
+    Output:
+    \pause
+    \vfill
+    Compiler error!
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Borrowing/References}
+    \begin{minted}{text}
+error[E0503]: cannot use `val` because it was mutably borrowed
+ --> src/main.rs:5:22
+  |
+3 |     let ref1 = &mut val;
+  |                -------- `val` is borrowed here
+4 |
+5 |     let copied_val = val;
+  |                      ^^^ use of borrowed `val`
+6 |
+7 |     println!("{ref1}");
+  |                ---- borrow later used here
+    \end{minted}
+    \pause
+    \vfill
+    The owner must not access the value at all while a mutable reference exists!
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Borrowing/References}
+    \begin{minted}[linenos]{rust}
+fn main() {
+    let val = 3;
+    let mut ref1 = &val;
+
+    println!("{ref1}");
+}
+    \end{minted}
+    \vfill
+    Output:
+    \pause
+    \vfill
+    \begin{minted}{text}
+3
+    \end{minted}
+    \pause
+    \vfill
+    Do not confuse \texttt{\&mut} and a mutable \texttt{\&} binding.
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Borrowing/References}
+    \texttt{\&mut} is reference that can mutate the referenced value.
+    \pause
+    \vfill
+    \begin{minted}[linenos]{rust}
+fn main() {
+    let mut val = 3;
+    let ref1 = &mut val;
+    *ref1 = 5;
+}
+    \end{minted}
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Borrowing/References}
+    \texttt{let mut \&} creates a mutable binding, which happens to be an immutable reference.
+    \pause
+    \vfill
+    \begin{minted}[linenos]{rust}
+fn main() {
+    let a = 3;
+    let b = 5;
+    let mut ref1 = &a;
+    ref1 = &b;
+}
+    \end{minted}
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Borrowing/References}
+    A combination is possible.
+    \pause
+    \vfill
+    \begin{minted}[linenos]{rust}
+fn main() {
+    let mut a = 3;
+    let mut b = 5;
+    let mut ref1 = &mut a;
+    ref1 = &mut b;
+    *ref1 = 7;
+    println!("{a} {b}");
+}
+    \end{minted}
+    \vfill
+    Output:
+    \pause
+    \vfill
+    \begin{minted}{text}
+3 7
+    \end{minted}
+\end{frame}
+
+
+\begin{frame}[fragile]
+    \frametitle{Borrowing/References}
+    Summary of the borrowing rules:
+    \vfill
+    \begin{itemize}
+        \item While a mutable reference exists, there must not be other references.
+        \item While a mutable reference exists, the owner must not use the value.
+        \pause
+        \item Thus, a mutable reference has exclusive access to the value.
+        \pause
+        \item Anything else would allow for data races.
+        \pause
+        \vspace{.3cm}
+        \item Multiple immutable references can exist simultaneously.
+        \item While a immutable reference exists, the owner must not modify the value.
+        \pause
+        \item Shared read-only access is unproblematic.
+    \end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Borrowing/References}
+    Another perspective:
+    \vfill
+    \begin{itemize}
+        \item When someone passes you an immutable reference, the compiler guarantees that the referenced value will never change. 
+        \pause
+        \item When someone passes you a mutable reference, the compiler guarantess that nobody else can access the value.
+        \vspace{.3cm}
+        \pause
+        \item Great for you: Avoiding obscure non-local bugs.
+        \item Great for compiler optimization.
+    \end{itemize}
+    \pause
+    \vfill
+    We look at examples of references as function arguments soon.
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Borrowing/References}
+    We now look at a few reference peculiarities.
+    \vfill
+    \begin{minted}[linenos]{rust}
+fn main() {
+    let val = 3;
+    let ref_ref = &&val;
+
+    println!("{ref_ref}");
+}
+    \end{minted}
+    \vfill
+    Output:
+    \begin{minted}{text}
+3
+    \end{minted}
+    \pause
+    \vfill
+    How? Where is \texttt{\&val}?
+\end{frame}
+
+
+\begin{frame}[fragile]
+    \frametitle{Borrowing/References}
+    We take a look at memory to see what is happening.
+    \pause
+    \vfill
+    \begin{minted}[linenos]{rust}
+fn main() {
+    let val = 3;
+    let ref_ref = &&val;
+
+    println!("addr of val:      {:p}", &val);
+    println!("addr of ref_ref:  {:p}", &ref_ref);
+    println!("value of ref_ref: {:p}", ref_ref);
+}
+    \end{minted}
+    \vfill
+    Output:
+    \begin{minted}{text}
+addr of val:      0x7fff6c19062c
+addr of ref_ref:  0x7fff6c190630
+value of ref_ref: 0x7fff6c190638
+    \end{minted}
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Borrowing/References}
+    \begin{minted}{text}
+addr of val:      0x7fff6c19062c
+addr of ref_ref:  0x7fff6c190630
+value of ref_ref: 0x7fff6c190638
+    \end{minted}
+    \pause
+    \begin{center}
+        \begin{tikzpicture}
+            \node[above] at (1.75, 0) {stack};
+            \drawbox{0}{-0.0}{3.5}{0.5}{\ldots}
+            \drawbox{0}{-0.5}{3.5}{1}{saved RBP}
+            \draw[->, dotted] (1.75,-4) -- (1.75,-4.5);
+            \node[left,font=\small] at (0, -2.5) {\texttt{0x7fff6c190638}};
+            \node[left,font=\small] at (0, -3.5) {\texttt{0x7fff6c190630}};
+            \node[left,font=\small] at (0, -4) {\texttt{0x7fff6c19062c}};
+            \pause
+            \drawbox{0}{-3.5}{3.5}{0.5}{\texttt{val}: 3}
+            \pause
+            \drawbox{0}{-2.5}{3.5}{1}{\texttt{ref\_ref}}
+            \pause
+            \drawbox{0}{-1.5}{3.5}{1}{}
+            \draw[->] (2.8,-3) -- (4,-3) -- (4, -2.5) -- (3.55, -2.5);
+            \pause
+            \draw[->, dashed] (2.8,-2) -- (4.5,-2) -- (4.5, -4) -- (3.55, -4);
+        \end{tikzpicture}
+    \end{center}
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Borrowing/References}
+    The compiler added a local variable for the intermediate reference.
+    Equivalent code:
+    \vfill
+    \begin{minted}[linenos]{rust}
+fn main() {
+    let val = 3;
+    let compiler_added = &val;
+    let ref_ref = &compiler_added;
+}
+    \end{minted}
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Borrowing/References}
+    \begin{minted}[linenos]{rust}
+fn main() {
+    let ref_ref = &&3;
+
+    println!("{ref_ref}");
+}
+    \end{minted}
+    \vfill
+    Output:
+    \pause
+    \begin{minted}{text}
+3
+    \end{minted}
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Borrowing/References}
+    \begin{minted}[linenos]{rust}
+fn main() {
+    let ref_ref = &&3;
+
+    println!("&ref_ref:  {:p}", &ref_ref);
+    println!("ref_ref:   {:p}", ref_ref);
+    println!("*ref_ref:  {:p}", *ref_ref);
+}
+    \end{minted}
+    \pause
+    \vfill
+    Output:
+    \begin{minted}{text}
+&ref_ref:  0x7fff37943720
+ref_ref:   0x59223b1c2ad8
+*ref_ref:  0x59223b176994
+    \end{minted}
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Borrowing/References}
+    \begin{minted}{text}
+&ref_ref:  0x7fff37943720
+ref_ref:   0x59223b1c2ad8
+*ref_ref:  0x59223b176994
+    \end{minted}
+    \pause
+    \vfill
+    \begin{center}
+        \begin{tikzpicture}
+            \node[above] at (1.75, 0) {stack};
+            \drawbox{0}{-0.0}{3.5}{0.5}{\ldots}
+            \drawbox{0}{-0.5}{3.5}{1}{saved RBP}
+            \draw[->, dotted] (1.75,-2.5) -- (1.75,-3);
+            \node[left,font=\small] at (0, -2.5) {\texttt{0x7fff37943720}};
+            \pause
+            \drawbox{0}{-1.5}{3.5}{1}{\texttt{ref\_ref}}
+            \pause
+            \draw[->] (2.8,-2) -- (4.5,-2) -- (4.5, -1.75) -- (5.45, -1.75);
+            \node[right,font=\small] at (5.5+3.9, -1.75) {\texttt{0x59223b1c2ad8}};
+            \pause
+            \drawbox{5.5}{-0.75}{3.5}{1}{}
+            \pause
+            \draw[->] (5.5+2.8,-1.25) -- (5.5+4,-1.25) -- (5.5+4, -3.25) -- (5.5+3.55, -3.25);
+            \node[right,font=\small] at (5.5+3.9, -3.25) {\texttt{0x59223b176994}};
+            \pause
+            \drawbox{5.5}{-2.75}{3.5}{0.5}{3}
+            \pause
+            \node[above] at (1.75+5.5, 0) {rodata};
+            \node[above] at (1.75+5.5, -0.5) {\ldots};
+            \node[above] at (1.75+5.5, -2.4) {\ldots};
+            \node[above] at (1.75+5.5, -3.8) {\ldots};
+        \end{tikzpicture}
+    \end{center}
+    \pause
+    \vfill
+    The compiler performs \textit{constant promotion}.
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Borrowing/References}
+    \begin{minted}[linenos]{rust}
+fn main() {
+    let a = 3;
+    let b = &a;
+
+    let sum = a + b;
+
+    println!("{sum}");
+}
+    \end{minted}
+    Output:
+    \pause
+    \vfill
+    \begin{minted}{text}
+6
+    \end{minted}
+    \pause
+    \vfill
+    But there is no auto-dereferencing going on!
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Borrowing/References}
+    We get to the details later (\textit{traits}), but the gist is that Rust offers the following addition functions:
+    \vfill
+    \begin{itemize}
+        \item \texttt{fn add(i32, i32) -> i32}
+        \item \texttt{fn add(i32, \&i32) -> i32}
+        \item \texttt{fn add(\&i32, i32) -> i32}
+        \item \texttt{fn add(\&i32, \&i32) -> i32}
+    \end{itemize}
+    \pause
+    \vfill
+    The functions accepting references dereference in the function implementation.
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Borrowing/References}
+    \begin{minted}[linenos]{rust}
+fn main() {
+    let a = 3;
+    let b = &&a;
+    let sum = a + b;
+    println!("{sum}");
+}
+    \end{minted}
+    Output:
+    \pause
+    \vfill
+    \begin{minted}{text}
+error[E0277]: cannot add `&&{integer}` to `{integer}`
+ --> src/main.rs:5:17
+  |
+5 |     let sum = a + b;
+  |                 ^ no implementation for `{integer} + &&{integer}`
+  |
+  = help: the trait `Add<&&{integer}>` is not implemented for `{integer}`
+    \end{minted}
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Borrowing/References}
+    \begin{minted}[linenos]{rust}
+fn main() {
+    let a = 3;
+    let mut reference = &a;
+    {
+        let b = 5;
+        reference = &b;
+    }
+    println!("{reference}");
+}
+    \end{minted}
+    Output:
+    \pause
+    \vfill
+    Compiler error!
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Borrowing/References}
+    \begin{minted}{text}
+error[E0597]: `b` does not live long enough
+ --> src/main.rs:6:21
+  |
+5 |         let b = 5;
+  |             - binding `b` declared here
+6 |         reference = &b;
+  |                     ^^ borrowed value does not live long enough
+7 |     }
+  |     - `b` dropped here while still borrowed
+8 |     println!("{reference}");
+  |                --------- borrow later used here
+    \end{minted}
+    \pause
+    \vfill
+    The compiler prevents us from causing a use after free.
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Borrowing/References}
+    \begin{minted}[linenos]{rust}
+fn main() {
+    let mut val = 3;
+    let reference = &mut val;
+    *reference = 5;
+    val = 7;
+}
+    \end{minted}
+    Valid?
+    \pause
+    \vfill
+    Depends on the Rust version and edition.
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Borrowing/References}
+    On Rust 1.30:
+    \vfill
+    \begin{minted}{text}
+error[E0506]: cannot assign to `val` because it is borrowed
+  --> <source>:15:5
+   |
+13 |     let reference = &mut val;
+   |                          --- borrow of `val` occurs here
+14 |     *reference = 5;
+15 |     val = 7;
+   |     ^^^^^^^ assignment to borrowed `val` occurs here
+    \end{minted}
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Borrowing/References}
+    On Rust 1.30: The compiler considers a reference alive until dropped.
+    \vfill
+    \begin{minted}[linenos]{rust}
+fn main() {
+    let mut val = 3;           // ------------+--val
+    let reference = &mut val;  // -+--ref.    |
+    *reference = 5;            //  |          |
+    val = 7;                   //  |          |
+}                              // -+----------+
+    \end{minted}
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Borrowing/References}
+    On Rust 1.63: The compiler considers a reference alive until its last use.
+    \vfill
+    \begin{minted}[linenos]{rust}
+fn main() {
+    let mut val = 3;           // ------------+--val
+    let reference = &mut val;  // -+--ref.    |
+    *reference = 5;            // -+          |
+    val = 7;                   //             |
+}                              // ------------+
+    \end{minted}
+    \pause
+    \vfill
+    \begin{itemize}
+        \item Reasoning about lifetimes locally is straightforward.
+        \item We will see more complexity (when passing references around) on the next slides.
+    \end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Borrowing/References}
+    \begin{itemize}
+        \item The compiler checks functions individually.
+        \item We have learned previously that types of function arguments have to be declared.
+        \pause
+        \item Rust requires function signatures to declare generic lifetime parameters for all references.
+    \end{itemize}
+    \vfill
+    \begin{minted}[linenos]{rust}
+fn add_five<'a>(num: &'a u64) -> u64 {
+    num + 5
+}
+    \end{minted}
+    \pause
+    \begin{minted}[linenos]{rust}
+fn increment<'a>(num: &'a mut u64) {
+    *num += 1;
+}
+    \end{minted}
+    \pause
+    \space
+    Generic lifetime parameters don't do much on their own; they help with how lifetimes of multiple references relate to each other.
+    We need more complex examples.
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Borrowing/References}
+    Local perspective of a function:
+    \vfill
+    \begin{minted}[linenos]{rust}
+fn identity<'a>(reference: &'a u64) -> &'a u64 {
+    reference
+}
+    \end{minted}
+    \pause
+    \vfill
+    \begin{itemize}
+        \item \texttt{'a} is the lifetime of a value.
+        \item \texttt{reference} is a reference to a \texttt{u64} that lives at least as long as \texttt{'a}.
+        \item The return value also is a reference to a \texttt{u64} that lives at least as long as \texttt{'a}.
+    \end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Borrowing/References}
+    Perspective of the function caller:
+    \vfill
+    \begin{minted}[linenos]{rust}
+fn main() {
+    let val = 3;                 // -+-- 'val
+    let ref1 = &val;             //  |
+    let ref2 = identity(ref1);   //  |
+}                                // -+
+    \end{minted}
+    \pause
+    \vfill
+    Assuming we refer to \texttt{val}'s lifetimes as \texttt{'val}, you could understand \texttt{identity} like:
+    \begin{minted}[linenos]{rust}
+fn identity(reference: &'val u64) -> &'val u64 {...}
+    \end{minted}
+    \pause
+    \vfill
+    \begin{itemize}
+        \item You could say \texttt{ref2} has the type \texttt{\&'val u64}.
+        \item The compiler can verify that \texttt{ref2} does not outlive the referenced value.
+    \end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Borrowing/References}
+    \begin{minted}[linenos]{rust}
+fn main() {
+    let val1 = 3;                       //
+    let mut reference = &val1;          // 
+    {                                   //
+        let val2 = 5;                   // -+-- 'val2
+        reference = identity(&val2);    //  |
+    }                                   // -+
+    println!("{reference}");            //
+}                                       //
+    \end{minted}
+    \pause
+    \vfill
+    Here, we can understand \texttt{identity} as:
+    \begin{minted}[linenos]{rust}
+fn identity(reference: &'val2 u64) -> &'val2 u64 {...}
+    \end{minted}
+    \pause
+    \vfill
+    The compiler sees the illegal usage of \texttt{reference: \&'val2} in Line 8.
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Borrowing/References}
+    \begin{minted}{text}
+error[E0597]: `val2` does not live long enough
+ --> src/main.rs:6:30
+  |
+5 |         let val2 = 5;                   // -+-- 'val2
+  |             ---- binding `val2` declared here
+6 |         reference = identity(&val2);    //  |
+  |                              ^^^^^ borrowed value does not live
+  |                                    long enough
+7 |     }                                   // -+
+  |     - `val2` dropped here while still borrowed
+8 |     println!("{reference}");            //
+  |                --------- borrow later used here
+    \end{minted}
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Borrowing/References}
+    \begin{itemize}
+        \item The patterns in our examples are straightforward.
+        \item The compiler can infer lifetimes in such cases.
+        \item Leaving out the lifetime parameters is called \textit{lifetime elision}.
+    \end{itemize}
+    \pause
+    \vfill
+    \begin{minted}[linenos]{rust}
+fn add_five<'a>(num: &'a u64) -> u64;
+fn add_five(num: &u64) -> u64;         // lifetime elision
+
+fn increment<'a>(num: &'a mut u64) -> u64;
+fn increment(num: &mut u64);                // lifetime elision
+
+fn identity<'a>(reference: &'a u64) -> &'a u64;
+fn identity(reference: &u64) -> &u64;            // lifetime elision
+    \end{minted}
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Borrowing/References}
+    When a function takes more than two reference arguments and returns a reference, explicit lifetime parameters are required.
+    \pause
+    \vfill
+    \begin{minted}[linenos]{rust}
+fn first<'a, 'b>(fst: &'a u64, _snd: &'b u64) -> &'a u64 {
+    fst
+}
+    \end{minted}
+    \pause
+    \vfill
+    \begin{minted}[linenos]{rust}
+fn second<'a, 'b>(_fst: &'a u64, snd: &'b u64) -> &'b u64 {
+    snd
+}
+    \end{minted}
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Borrowing/References}
+    \begin{minted}[linenos]{rust}
+fn first<'a, 'b>(fst: &'a u64, _snd: &'b u64) -> &'a u64 {...}
+fn main() {
+    let a = 3;
+    let reference = {
+        let b = 5;
+        first(&a, &b)
+    };
+    println!("{reference}");
+}
+    \end{minted}
+    \vfill
+    Output:
+    \pause
+    \begin{minted}{text}
+3
+    \end{minted}
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Borrowing/References}
+    \begin{minted}[linenos]{rust}
+fn second<'a, 'b>(_fst: &'a u64, snd: &'b u64) -> &'b u64 {...}
+fn main() {
+    let a = 3;
+    let reference = {
+        let b = 5;
+        second(&a, &b)
+    };
+    println!("{reference}");
+}
+    \end{minted}
+    \vfill
+    Output:
+    \pause
+    Compiler error!
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Borrowing/References}
+    \begin{minted}{text}
+error[E0597]: `b` does not live long enough
+ --> src/main.rs:6:17
+  |
+4 |     let reference = {
+  |         --------- borrow later stored here
+5 |         let b = 5;
+  |             - binding `b` declared here
+6 |         snd(&a, &b)
+  |                 ^^ borrowed value does not live long enough
+7 |     };
+  |     - `b` dropped here while still borrowed
+    \end{minted}
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Borrowing/References}
+    \begin{minted}[linenos]{rust}
+fn first<'a, 'b>(_fst: &'a u64, snd: &'b u64) -> &'a u64 {
+    snd
+}
+    \end{minted}
+    \vfill
+    Valid?
+    \pause
+    Compiler error!
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Borrowing/References}
+    \begin{minted}{text}
+error: lifetime may not live long enough
+ --> src/lib.rs:2:5
+  |
+1 | fn first<'a, 'b>(_fst: &'a u64, snd: &'b u64) -> &'a u64 {
+  |          --  -- lifetime `'b` defined here
+  |          |
+  |          lifetime `'a` defined here
+2 |     snd
+  |     ^^^ function was supposed to return data with lifetime `'a` but
+  |         it is returning data with lifetime `'b`
+    \end{minted}
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Borrowing/References}
+    \begin{minted}[linenos]{rust}
+fn larger<'a, 'b>(num1: &'a u64, num2: &'b u64) -> &'a u64 {
+    if num1 > num2 {
+        num1
+    } else {
+        num2
+    }
+}
+    \end{minted}
+    \vfill
+    Valid?
+    \pause
+    Compiler error!
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Borrowing/References}
+    \begin{minted}{text}
+error: lifetime may not live long enough
+ --> src/lib.rs:5:9
+  |
+1 | fn larger<'a, 'b>(num1: &'a u64, num2: &'b u64) -> &'a u64 {
+  |           --  -- lifetime `'b` defined here
+  |           |
+  |           lifetime `'a` defined here
+...
+5 |         num2
+  |         ^^^^ function was supposed to return data with lifetime `'a`
+  |              but it is returning data with lifetime `'b`
+    \end{minted}
+    \pause
+    \vfill
+    We would have the same issue with returning \texttt{num1} if the return type was  \texttt{\&'b u64}.
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Borrowing/References}
+    The solution:
+    \begin{minted}[linenos]{rust}
+fn larger<'a>(num1: &'a u64, num2: &'a u64) -> &'a u64 {
+    if num1 > num2 {
+        num1
+    } else {
+        num2
+    }
+}
+    \end{minted}
+    \pause
+    \begin{itemize}
+        \item \texttt{num1} and \texttt{num2} both having the lifetime parameter \texttt{'a} does not mean the values they point at live exactly as long as the other.
+        \pause
+        \item It means that that \texttt{num1} and \texttt{num2} live \textbf{at least} as long as \texttt{'a}.
+    \end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Borrowing/References}
+    \begin{minted}[linenos]{rust}
+fn larger<'a>(num1: &'a u64, num2: &'a u64) -> &'a u64 {...}
+fn main() {
+    let val1 = 5;                //            -+-- 'val1
+    let reference = {            //             |
+        let val2 = 3;            // -+-- 'val2  |
+        larger(&val1, &val2)     //  |          |
+    };                           // -+          |
+    println!("{reference}");     //            -+
+}
+    \end{minted}
+    \pause
+    \begin{itemize}
+        \item The compiler chooses the shorter of the two input lifetimes---so \texttt{reference} is basically \texttt{\&'val2 u64}.
+        \pause
+        \item We can see that the code would work (because \texttt{5 > 3}), but the compiler is conservative.
+    \end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Borrowing/References}
+    \begin{minted}{text}
+error[E0597]: `val2` does not live long enough
+  --> src/main.rs:14:23
+   |
+12 |     let reference = {            //             |
+   |         --------- borrow later stored here
+13 |         let val2 = 3;            // -+-- 'val2  |
+   |             ---- binding `val2` declared here
+14 |         larger(&val1, &val2)     //  |          |
+   |                       ^^^^^ borrowed value does not live long enough
+15 |     };                           // -+          |
+   |     - `val2` dropped here while still borrowed
+    \end{minted}
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Borrowing/References}
+    \begin{itemize}
+        \item There is a special lifetime that specifies that a value will live until the end of the program: \texttt{'static}
+        \item The references from constant promotion have this lifetime.
+    \end{itemize}
+    \pause
+    \vfill
+    \begin{minted}[linenos]{rust}
+fn reference_to_three() -> &'static u64 {
+    &3
+}
+fn main() {
+    let ref1 = reference_to_three();
+    let ref2: &'static &'static bool = &&false;
+    let ref3: &'static bool = *ref2;
+}
+    \end{minted}
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Borrowing/References}
+    \begin{minted}[linenos]{rust}
+struct Stack {
+    top: usize,
+    data: &mut [u64; 10],
+}
+
+fn main() {
+    let mut data = [0; 10];
+    let stack = Stack {
+        top: 0,
+        data: &mut data,
+    };
+}
+    \end{minted}
+    Valid?
+    \pause
+    \vfill
+    Compiler error.
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Borrowing/References}
+    \begin{minted}{text}
+error[E0106]: missing lifetime specifier
+ --> src/main.rs:3:11
+  |
+3 |     data: &mut [u64; 10],
+  |           ^ expected named lifetime parameter
+  |
+help: consider introducing a named lifetime parameter
+  |
+1 ~ struct Stack<'a> {
+2 |     top: usize,
+3 ~     data: &'a mut [u64; 10],
+  |
+    \end{minted}
+    \pause
+    \vfill
+    \texttt{struct}s and \texttt{enum}s must be transparent about the lifetimes of the references they store.
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Borrowing/References}
+    \begin{minted}[linenos]{rust}
+struct Stack<'a> {
+    top: usize,
+    data: &'a mut [u64; 10],
+}
+
+fn main() {
+    let mut data = [0; 10];
+    let stack = Stack {
+        top: 0,
+        data: &mut data,
+    };
+}
+    \end{minted}
+    Valid?
+    \pause
+    \vfill
+    Yes.
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Implementation Blocks}
+    \begin{itemize}
+        \item From object-oriented programming languages, we are used to defining and calling methods on objects/classes.
+        \item Rust also allows the definition of methods and associated functions for types with \texttt{impl} blocks.
+        \pause
+        \vspace{.3cm}
+        \item Constructors are a typical example of associated functions:
+    \end{itemize}
+    \pause
+    \vfill
+    \begin{minted}[linenos]{rust}
+struct Vec2d(f64, f64);
+impl Vec2d {
+    fn new(x: f64, y: f64) -> Vec2d {
+        Vec2d(x, y)
+    }
+    fn default() -> Vec2d {  // reminder: no function overloading
+        Vec2d(0., 0.)
+    }
+}
+    \end{minted}
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Implementation Blocks}
+    \begin{minted}[linenos]{rust}
+struct Vec2d(f64, f64);
+impl Vec2d {
+    fn new(x: f64, y: f64) -> Vec2d {...}
+    fn default() -> Vec2d {...}
+}
+
+fn main() {
+    let zero_vec = Vec2d::default();
+    let custom_vec = Vec2d::new(4., 2.5);
+}
+    \end{minted}
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Implementation Blocks}
+    Replacing the type name with \texttt{Self} within \texttt{impl} blocks is best practice.
+    \vfill
+    \begin{minted}[linenos]{rust}
+struct Vec2d(f64, f64);
+
+impl Vec2d {
+    fn new(x: f64, y: f64) -> Self {
+        Self(x, y)
+    }
+    fn default() -> Vec2d {
+        Self(0., 0.)
+    }
+}
+    \end{minted}
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Implementation Blocks}
+    \begin{minted}[linenos]{rust}
+struct Vec2d(f64, f64);
+
+impl Vec2d {
+    fn scale(self: &mut Self, scale: f64) {
+        self.0 *= scale;
+        self.1 *= scale;
+    }
+}
+    \end{minted}
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Implementation Blocks}
+    \begin{minted}[linenos]{rust}
+#[derive(Debug)]
+struct Vec2d(f64, f64);
+impl Vec2d {
+    ...
+    fn scale(self: &mut Self, scale: f64) {...}
+}
+
+fn main() {
+    let mut vec = Vec2d::new(4., 2.5);
+    Vec2d::scale(&mut vec, 2.);
+    println!("{:?}", vec);
+}
+    \end{minted}
+    \pause
+    \vfill
+    Output:
+    \begin{minted}{text}
+Vec2d(8.0, 5.0)
+    \end{minted}
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Implementation Blocks}
+    \begin{minted}[linenos]{rust}
+#[derive(Debug)]
+struct Vec2d(f64, f64);
+impl Vec2d {
+    ...
+    fn scale(self: &mut Self, scale: f64) {...}
+}
+
+fn main() {
+    let mut vec = Vec2d::new(4., 2.5);
+    vec.scale(2.);
+    println!("{:?}", vec);
+}
+    \end{minted}
+    \pause
+    \vfill
+    Output:
+    \begin{minted}{text}
+Vec2d(8.0, 5.0)
+    \end{minted}
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Implementation Blocks}
+    An associated function becomes a method when the first parameter is called \texttt{self} and has one of the types:
+    \begin{itemize}
+        \item \texttt{Self}
+        \item \texttt{\&Self}
+        \item \texttt{\&mut Self}
+    \end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Implementation Blocks}
+    \begin{minted}[linenos]{rust}
+impl Vec2d {
+    fn scale(self: &mut Self, scale: f64) {
+        self.0 *= scale;
+        self.1 *= scale;
+    }
+}
+    \end{minted}
+    \pause
+    \vfill
+    Rust offers special syntax to make method signatures more ergonomic.
+    \begin{minted}[linenos]{rust}
+impl Vec2d {
+    fn scale(&mut self, scale: f64) {
+        self.0 *= scale;
+        self.1 *= scale;
+    }
+}
+    \end{minted}
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Implementation Blocks}
+    \begin{minted}[linenos]{rust}
+impl Vec2d {
+    fn length(self: &Self) -> f64 {
+        // We make use of the methods f64::powi and f64::sqrt
+        let Self(x, y) = self;
+        let length_squared = x.powi(2) + y.powi(2);
+        length_squared.sqrt()
+    }
+}
+    \end{minted}
+    \pause
+    \vfill
+    Shortened:
+    \begin{minted}[linenos]{rust}
+impl Vec2d {
+    fn length(&self) -> f64 {
+    ...
+    \end{minted}
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Implementation Blocks}
+    \begin{minted}[linenos]{rust}
+impl Vec2d {
+    fn to_tuple(self: Self) -> (f64, f64) {
+        (self.0, self.1)
+    }
+}
+    \end{minted}
+    \pause
+    \vfill
+    Shortened:
+    \begin{minted}[linenos]{rust}
+impl Vec2d {
+    fn to_tuple(self) -> (f64, f64) {
+        (self.0, self.1)
+    }
+}
+    \end{minted}
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Implementation Blocks}
+    \begin{minted}[linenos]{rust}
+#[derive(Debug)]
+struct Vec2d(f64, f64);
+impl Vec2d {
+    fn new(x: f64, y: f64) -> Self { ... }
+    fn scale(&mut self) { ... }
+    fn to_tuple(self) -> (f64, f64) { ... }
+}
+fn main() {
+    let mut vec = Vec2d::new(4., 2.5);
+    vec.scale(2.);
+    let (x, y) = vec.to_tuple();
+    println!("{vec:?} {x} {y}");
+}
+    \end{minted}
+    \pause
+    \vfill
+    Output:
+    \pause
+    Compiler error.
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Implementation Blocks}
+    \begin{minted}[fontsize=\small]{text}
+error[E0382]: borrow of moved value: `vec`
+  --> src/main.rs:33:16
+   |
+30 |     let mut vec = Vec2d::new(4., 2.5);
+   |         ------- move occurs because `vec` has type `Vec2d`, which does not
+   |                 implement the `Copy` trait
+31 |     vec.scale(2.);
+32 |     let (x, y) = vec.to_tuple();
+   |                      ---------- `vec` moved due to this method call
+33 |     println!("{vec:?} {x} {y}");
+   |                ^^^ value borrowed here after move
+   |
+note: `Vec2d::to_tuple` takes ownership of the receiver `self`, which moves `vec`
+  --> src/main.rs:23:17
+   |
+23 |     fn to_tuple(self) -> (f64, f64) {
+   |                 ^^^^
+    \end{minted}
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Implementation Blocks}
+    \begin{minted}[linenos]{rust}
+struct Vec2d(f64, f64);
+impl Vec2d {
+    fn new(x: f64, y: f64) -> Self { ... }
+    fn scale(&mut self) { ... }
+    fn length(&self) -> f64 { ... }
+}
+fn main() {
+    let mut vec = Vec2d::new(3., 0.);
+    vec.scale(2.);
+    println!("{}", vec.length());
+}
+    \end{minted}
+    \pause
+    \vfill
+    Output:
+    \pause
+    \begin{minted}{text}
+6
+    \end{minted}
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Implementation Blocks}
+    \begin{minted}[linenos]{rust}
+fn main() {
+    let mut vec = Vec2d::new(3., 0.);
+    vec.scale(2.);
+    println!("{}", vec.length());
+}
+    \end{minted}
+    \vfill
+    For method calls, the compiler automatically creates the necessary references (\textit{autoref}).
+    \pause
+    \vfill
+    \begin{minted}[linenos]{rust}
+fn main() {
+    let mut vec = Vec2d::new(3., 0.);
+    (&mut vec).scale(2.);
+    println!("{}", (&vec).length());
+}
+    \end{minted}
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Implementation Blocks}
+    \begin{minted}[linenos]{rust}
+struct Vec2d(f64, f64);
+impl Vec2d {
+    fn new(x: f64, y: f64) -> Self { ... }
+    fn scale(&mut self) { ... }
+    fn length(&self) -> f64 { ... }
+}
+fn func(deep_vec_ref: &&&Vec2d) {
+    let length = deep_vec_ref.length();
+    println!("{length}");
+}
+    \end{minted}
+    \pause
+    \vfill
+    Valid?
+    \pause
+    Yes.
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Implementation Blocks}
+    \begin{minted}[linenos]{rust}
+fn func(deep_vec_ref: &&&Vec2d) {
+    let length = deep_vec_ref.length();
+    println!("{length}");
+}
+    \end{minted}
+    \vfill
+    The compiler can also automatically dereference (\textit{autoderef}).
+    \pause
+    \vfill
+    \begin{minted}[linenos]{rust}
+fn func(deep_vec_ref: &&&Vec2d) {
+    let length = (**deep_vec_ref).length();
+    println!("{length}");
+}
+    \end{minted}
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Generics}
+    \begin{itemize}
+        \item You might already generics from Java, C++, Python type hints, \ldots
+        \item Let us design investigate with a few examples.
+    \end{itemize}
+    \pause
+    \vfill
+    \begin{minted}[linenos]{rust}
+enum Option<T> {
+    Some(T),
+    None,
+}
+
+fn main() {
+    let maybe_int: Option<i32> = Option::Some(3);
+    let nested: Option<Option<i32>> = Option::Some(Option::Some(3));
+    let maybe_float = Option::Some(4.5);  // type inference
+}
+    \end{minted}
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Generics}
+    \begin{minted}[linenos]{rust}
+enum Option<T> {
+    Some(T),
+    None,
+}
+
+fn main() {
+    let option1 = Option::Some(false);
+    let option2 = Option::None;
+    let option3 = Option::Some(3);
+}
+    \end{minted}
+    \vfill
+    Valid?
+    \pause
+    \vfill
+    Compiler error.
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Generics}
+    \begin{minted}{text}
+error[E0282]: type annotations needed for `Option<_>`
+ --> src/main.rs:9:9
+  |
+9 |     let option2 = Option::None;
+  |         ^^^^^^^   ------------ type must be known at this point
+  |
+help: consider giving `option2` an explicit type, where the type for
+type parameter `T` is specified
+  |
+9 |     let option2: Option<T> = Option::None;
+  |                +++++++++++
+    \end{minted}
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Generics}
+    \begin{minted}[linenos]{rust}
+enum Option<T> {
+    Some(T),
+    None,
+}
+fn main() {
+    let option = Option::None;
+    do_something(&option);
+}
+fn do_something(opt: &Option<u64>) { ... }
+    \end{minted}
+    \vfill
+    Valid?
+    \pause
+    \vfill
+    Yes! The compiler can infer the type from the function call.
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Generics}
+    The \texttt{impl} block has to introduce the generic and can then use the generic parameter in the type and the methods and functions.
+    \pause
+    \vfill
+    \begin{minted}[linenos]{rust}
+enum Option<T> {
+    Some(T),
+    None,
+}
+
+impl<T> Option<T> {
+    fn unwrap_or(self, default: T) -> T {
+        match self {
+            Option::Some(t) => t,
+            Option::None => default,
+        }
+    }
+}
+    \end{minted}
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Generics}
+    You can choose to implement methods only for specific types.
+    \pause
+    \vfill
+    \begin{minted}[linenos]{rust}
+enum Option<T> {
+    Some(T),
+    None,
+}
+
+impl Option<u64> {
+    fn unwrap_or_zero(self) -> u64 {
+        self.unwrap_or(0)
+    }
+}
+    \end{minted}
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Generics}
+    You can also introduce generics in individual functions.
+    \pause
+    \vfill
+    \begin{minted}[linenos]{rust}
+fn array_checked_get<T>(array: [T; 20], index: usize) -> Option<T> {
+    if index >= 20 {
+        return Option::None;
+    }
+
+    Option::Some(array[index])
+}
+    \end{minted}
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Generics}
+    Apart from generic lifetime and type parameters, Rust also supports generic const parameters.
+    \pause
+    \vfill
+    \begin{minted}[linenos]{rust}
+fn array_checked_get<T, const N: usize>(array: &[T; N], index: usize)
+ -> Option<&T> {
+    if index >= N {
+        return Option::None;
+    }
+
+    Option::Some(&array[index])
+}
+    \end{minted}
+    \pause
+    \vfill
+    You can currently only use the integer types, \texttt{char}, and \texttt{bool} as generic consts.
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Generics}
+    \begin{minted}[linenos]{rust}
+fn main() {
+    let option1 = Option::Some(3);
+    let option2: Option<bool> = Option::None;
+    let option3 = Option::Some(4.5);
+}
+    \end{minted}
+    \pause
+    \vfill
+    \begin{itemize}
+        \item There is no runtime cost for generics.
+        \item The compiler performs \textit{monomorphization}: It generates the non-generic types \texttt{Option<i32>}, \texttt{Option<bool>}, and \texttt{Option<f64>}.
+    \end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{\texttt{Option} in the standard library}
+    \begin{itemize}
+        \item The \texttt{Option} type is Rust's way to express the absense of values.
+        \pause
+        \item \texttt{Option} is used so frequently that it is part of the standard library and standard prelude (i.e., available without import statements).
+        \item The values \texttt{Some} and \texttt{None} are also part of the prelude---no need to prepend \texttt{Option::}.
+        \item The standard library implements a lot of useful functions for \texttt{Option}, such as \texttt{unwrap\_or}.
+        \pause
+        \vspace{.3cm}
+        \item The functionality of our \texttt{array\_checked\_get} function is available through the \texttt{get} method on arrays.
+    \end{itemize}
+    \pause
+    \vfill
+    \begin{minted}[linenos]{rust}
+fn main () {
+    match [true; 10].get(3) {
+        Some(val) => println!("{val}"),
+        None => {}
+    }
+}
+    \end{minted}
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{\texttt{Option} in the standard library}
+    \begin{minted}[linenos,fontsize=\small]{rust}
+fn func<const N: usize>(array: [Option<u64>; N], index: usize, dividend: u64)
+ -> Option<u64> {
+    let elem = match array.get(index) {
+        Some(elem) => elem,
+        None => return None,
+    };
+    let inner = match elem {
+        Some(inner) => inner,
+        None => return None,
+    };
+    // u64::safe_div(&self, v: &Self) -> Option<u64>
+    let div_result = match dividend.checked_div(*inner) {
+        Some(result) => result,
+        None => return None,
+    };
+    Some(div_result)
+}
+    \end{minted}
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{\texttt{Option} in the standard library}
+    We have to explicitly handle
+    \begin{itemize}
+        \item array index out of bounds
+        \item array element is None
+        \item division is invalid (divisor is zero, over-, underflow)
+    \end{itemize}
+    \pause
+    \vfill
+    But the code is really verbose and repetitive.
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{\texttt{Option} in the standard library}
+    \begin{itemize}
+        \item You can use the \texttt{?} operator on \texttt{Option} values in function that return an \texttt{Option}.
+        \item The operator either unwraps the inner value or returns \texttt{None}.
+    \end{itemize}
+    \pause
+    \vfill
+    \begin{minted}[linenos,fontsize=\small]{rust}
+fn func<const N: usize>(array: [Option<u64>; N], index: usize, dividend: u64)
+ -> Option<u64> {
+    let elem = array.get(index)?;
+    let inner = elem?;
+    let div_result = dividend.safe_div(inner)?;
+    Some(div_result)
+}
+    \end{minted}
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{\texttt{Option} in the standard library}
+    Same code, more concise. We do not need to de- and reconstruct the last \texttt{Option}.
+    \vfill
+    \begin{minted}[linenos,fontsize=\small]{rust}
+fn func<const N: usize>(array: [Option<u64>; N], index: usize, dividend: u64)
+ -> Option<u64> {
+    let divisor = array.get(index)??;
+    dividend.safe_div(divisor)
+}
+    \end{minted}
+    \pause
+    \vfill
+    \begin{itemize}
+        \item Now the code almost looks like we ignore that values could be missing.
+        \item The compiler will complain if we would actually ignore.
+    \end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Error Handling with \texttt{Result}}
+    \begin{itemize}
+        \item \texttt{Option} is not perfectly suited to represent the result of fallible functions.
+        \item \texttt{None} can express that an error happened but not further details.
+    \end{itemize}
+    \pause
+    \vfill
+    In the Cpu exercise, you encountered a custom type that represented the outcomes of instruction execution.
+    \vfill
+    \begin{minted}[linenos,fontsize=\small]{rust}
+enum InstructionExecutionResult {
+    SuccessWithoutOutput(Cpu),
+    SuccessWithOutput(u64, Cpu),
+    Error(InstructionExecutionError),
+}
+    \end{minted}
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Error Handling with \texttt{Result}}
+    Rust's standard library offers the \texttt{Result} type.
+    \vfill
+    \begin{minted}[linenos,fontsize=\small]{rust}
+enum Result<T, E> {
+    Ok(T),
+    Err(E),
+}
+    \end{minted}
+    \pause
+    \vfill
+    As with \texttt{Option}, you can use the variants without prepending \texttt{Result::}.
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Error Handling with \texttt{Result}}
+    \begin{minted}[linenos,fontsize=\small]{rust}
+fn execute_instruction(mut cpu: Cpu, instruction: Instruction)
+ -> InstructionExecutionResult { ... }
+    \end{minted}
+    \vfill
+    We change the \texttt{execute\_instruction} to use \texttt{Result}.
+    \pause
+    \vfill
+    \begin{minted}[linenos,fontsize=\small]{rust}
+fn execute_instruction(mut cpu: Cpu, instruction: Instruction)
+ -> Result<(Cpu, Option<u64>), InstructionExecutionError> { ... }
+    \end{minted}
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Error Handling with \texttt{Result}}
+    \begin{minted}[linenos,fontsize=\small]{rust}
+fn execute_instruction(mut cpu: Cpu, instruction: Instruction)
+ -> Result<(Cpu, Option<u64>), InstructionExecutionError> {
+    ...
+        Instruction::Push(val) => {
+            if cpu.stackpointer == 5 {
+                return Err(InstructionExecutionError::StackOverflow);
+            }
+            cpu.data[cpu.stackpointer] = val;
+            cpu.stackpointer += 1;
+            Ok(cpu, None)
+        }
+    ...
+}
+    \end{minted}
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Error Handling with \texttt{Result}}
+    \begin{minted}[linenos,fontsize=\small]{rust}
+fn execute_instruction(mut cpu: Cpu, instruction: Instruction)
+ -> Result<(Cpu, Option<u64>), InstructionExecutionError> {
+    ...
+        Instruction::Pop => {
+            if cpu.stackpointer == 0 {
+                return Err(InstructionExecutionError::StackUnderflow);
+            }
+            cpu.stackpointer -= 1;
+            let val = cpu.data[cpu.stackpointer];
+            Ok(cpu, Some(val))
+        }
+    ...
+}
+    \end{minted}
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Error Handling with \texttt{Result}}
+    The \texttt{?} operator also works for \texttt{Result}, if the error types are comptabile.
+    \vfill
+    \begin{minted}[linenos,fontsize=\small]{rust}
+fn execute_instruction(mut cpu: Cpu, instruction: Instruction)
+ -> Result<(Cpu, Option<u64>), InstructionExecutionError> {
+    ...
+        Instruction::Multiply => {
+            let (cpu, op1) = execute_instruction(cpu, Instruction::Pop)?;
+            let (cpu, op2) = execute_instruction(cpu, Instruction::Pop)?;
+            let result = op1.unwrap() * op2.unwrap();
+            execute_instruction(cpu, Instruction::Push(result))
+    ...
+}
+    \end{minted}
+    \pause
+    \vfill
+    We have not seen the \texttt{Option<T>::unwrap} method yet.
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Error Handling with \texttt{Result}}
+    \begin{minted}[linenos,fontsize=\small]{rust}
+impl<T> Option<T> {
+    fn unwrap(self) -> T {
+        match self {
+            Some(val) => val,
+            None => panic!("called `Option::unwrap()` on a `None` value"),
+        }
+    }
+}
+    \end{minted}
+    \pause
+    \vfill
+    \begin{itemize}
+        \item \texttt{Result} also has an equivalent \texttt{unwrap} method.
+        \pause
+        \item \texttt{unwrap} converts a recoverable error into an unrecoverable error.
+        \item When a successful pop instruction has no outputs, our pop implementation is wrong. Panicking then is a reasonable choice.
+    \end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Traits}
+    We often encounter the case that many types implement the same functionality.
+    \begin{itemize}
+        \item Addition
+        \item Converting to a string (for printing)
+        \item Checking equality
+    \end{itemize}
+    \pause
+    \vfill
+    \textit{Traits} allow for to formalize shared functionality of different types.
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Traits}
+    We often encounter the case that many types implement the same functionality.
+    \begin{itemize}
+        \item Addition
+        \item Converting to a string (for printing)
+        \item Checking equality
+    \end{itemize}
+    \pause
+    \vfill
+    \textit{Traits} allow for to formalize shared functionality of different types.
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Traits}
+    We define the \texttt{Area} trait.
+    \vfill
+    \begin{minted}[linenos,fontsize=\small]{rust}
+trait Area {
+    fn area(&self) -> f64;
+}
+    \end{minted}
+    \pause
+    \vfill
+    Every type that implements this trait has to implement \texttt{area}.
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Traits}
+    \begin{minted}[linenos]{rust}
+struct Rect {
+    width: f64,
+    height: f64,
+}
+impl Area for Rect {
+    fn area(&self) -> f64 {
+        self.width * self.height
+    }
+}
+    \end{minted}
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Traits}
+    \begin{minted}[linenos]{rust}
+struct Triangle {
+    base: f64,
+    height: f64,
+}
+impl Area for Rect {
+    fn area(&self) -> f64 {
+        0.5 * base * height
+    }
+}
+    \end{minted}
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Traits}
+    \begin{minted}[linenos]{rust}
+struct Circle {
+    radius: f64
+}
+impl Area for Rect {
+    fn area(&self) -> f64 {
+        radius.powi(2) * std::f64::consts::PI
+    }
+}
+    \end{minted}
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Traits}
+    \begin{minted}[linenos]{rust}
+use std::f64::consts::PI;
+
+struct Circle {
+    radius: f64
+}
+impl Area for Rect {
+    fn area(&self) -> f64 {
+        radius.powi(2) * PI
+    }
+}
+    \end{minted}
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Traits}
+    \begin{minted}[linenos]{rust}
+use std::f64::consts::PI;
+
+struct Circle {
+    radius: f64
+}
+impl Area for Rect {
+    fn area(&self) -> f64 {
+        radius.powi(2) * PI
+    }
+}
+    \end{minted}
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Traits}
+    We can use a trait to introduce \texttt{trait bounds} to generic type parameters.
+    \begin{minted}[linenos]{rust}
+fn print_area<T: Area>(t: T) {
+    println!("The area is {}", t.area());
+}
+    \end{minted}
+    \pause
+    \vfill
+    \begin{itemize}
+        \item The caller can only choose types that implement the \texttt{Area} trait.
+        \item Inside the function, we can call of functions of \texttt{Area}.
+    \end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Traits}
+    A trait can specify functions and methods with default implementations.
+    \vfill
+    \begin{minted}[linenos]{rust}
+trait Area {
+    fn area(&self) -> f64;
+
+    fn double_area(&self) -> f64 {
+        self.area() * 2.
+    }
+}
+    \end{minted}
+    \pause
+    \vfill
+    Implementing types can override default implementations.
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Traits}
+    \begin{minted}[linenos]{rust}
+struct Rect {
+    width: f64,
+    height: f64,
+}
+impl Area for Rect {
+    fn area(&self) -> f64 {
+        self.width * self.height
+    }
+}
+fn main() {
+    let rect = Rect { width: 3., height: 4.5, };
+    println!("{}", rect.double_area());
+}
+    \end{minted}
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Traits}
+    We introduce another simple trait.
+    \vfill
+    \begin{minted}[linenos]{rust}
+trait Circumference {
+    fn circumference(&self) -> f64;
+}
+    \end{minted}
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Traits}
+    You can have multiple trait bounds on the same generic parameter.
+    \vfill
+    \begin{minted}[linenos]{rust}
+fn area_circumference_ratio<T: Area + Circumference>(t: T) -> f64 {
+    t.area() / t.circumference()
+}
+    \end{minted}
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Traits}
+    If the function signature becomes too cluttered, you can specify the trait bounds with \texttt{where}.
+    \vfill
+    \begin{minted}[linenos]{rust}
+fn area_circumference_ratio<T>(t: T) -> f64
+where
+    T: Area + Circumference,
+{
+    t.area() / t.circumference()
+}
+    \end{minted}
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Traits}
+    If a generic type parameter occurs only once in the signature, you can use \texttt{impl} syntax.
+    \vfill
+    \begin{minted}[linenos]{rust}
+fn area_circumference_ratio<T>(t: impl Area + Circumference) -> f64
+{
+    t.area() / t.circumference()
+}
+    \end{minted}
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Traits}
+    A trait can require an implementing type to implement other traits (\textit{supertraits}).
+    \vfill
+    \begin{minted}[linenos]{rust}
+trait AreaCircumferenceRatio: Area + Circumference {
+    fn area_circumference_ratio(&self) -> f64
+    {
+        self.area() / self.circumference()
+    }
+}
+    \end{minted}
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Traits}
+    \begin{minted}[linenos]{rust}
+struct Rect { ... }
+impl Area for Rect { ... }
+impl Circumference for Rect { ... }
+
+fn main() {
+    let rect = Rect { width: 3., height: 4.5, };
+    println!("{}", rect.area_circumference_ratio());
+}
+    \end{minted}
+    \vfill
+    Valid?
+    \pause
+    \vfill
+    Compiler error.
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Traits}
+    \begin{minted}[fontsize=\small]{text}
+error[E0599]: no method named `area_circumference_ratio` found for struct
+`Rect` in the current scope
+  --> src/main.rs:33:25
+   |
+22 | struct Rect {
+   | ----------- method `area_circumference_ratio` not found for this struct
+...
+33 |     println!("{}", rect.area_circumference_ratio());
+   |                         ^^^^^^^^^^^^^^^^^^^^^^^^ method not found in
+   |                                                  `Rect`
+   |
+   = help: items from traits can only be used if the trait is implemented
+           and in scope
+note: `AreaCircumferenceRatio` defines an item `area_circumference_ratio`,
+perhaps you need to implement it
+    \end{minted}
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Traits}
+    Even if there is nothing to implement, we need the \texttt{impl} block.
+    \vfill
+    \begin{minted}[linenos]{rust}
+struct Rect { ... }
+impl Area for Rect { ... }
+impl Circumference for Rect { ... }
+impl AreaCircumferenceRatio for Rect {}
+
+fn main() {
+    let rect = Rect { width: 3., height: 4.5, };
+    println!("{}", rect.area_circumference_ratio());
+}
+    \end{minted}
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Traits}
+    The standard library defines the trait \texttt{PartialEq}, which approximately is:
+    \vfill
+    \begin{minted}[linenos]{rust}
+pub const trait PartialEq<Rhs = Self> {
+    fn eq(&self, other: &Rhs) -> bool;
+
+    fn ne(&self, other: &Rhs) -> bool {
+        !self.eq(other)
+    }
+}
+    \end{minted}
+    \pause
+    \vfill
+    \texttt{Rhs} is a generic type parameter with a default.
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Traits}
+    Let us implement \texttt{PartialEq} for \texttt{Rect}.
+    \begin{minted}[linenos]{rust}
+struct Rect {
+    width: f64,
+    height: f64,
+}
+impl PartialEq for Rect {
+    fn eq(&self, other: &Self) -> bool {
+        self.width == other.width && self.height == other.height
+    }
+}
+    \end{minted}
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Traits}
+    \begin{minted}[linenos]{rust}
+struct Rect { ... }
+impl PartialEq for Rect { ... }
+
+fn main() {
+    let rect1 = Rect { width: 3., height: 4.5};
+    let rect2 = Rect { width: 4.5, height: 3.};
+
+    println("{} {} {}", rect1.eq(rect1), rect1.eq(rect2), rect1.ne(rect2));
+}
+    \end{minted}
+    \vfill
+    Output:
+    \pause
+    \vfill
+    Compiler error! We have to pass by reference.
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Traits}
+    \begin{minted}[linenos]{rust}
+struct Rect { ... }
+impl PartialEq for Rect { ... }
+
+fn main() {
+    let rect1 = Rect { width: 3., height: 4.5 };
+    let rect2 = Rect { width: 4.5, height: 3. };
+
+    println("{} {} {}", rect1.eq(&rect1), rect1.eq(&rect2), rect1.ne(&rect2));
+}
+    \end{minted}
+    \vfill
+    Output:
+    \pause
+    \vfill
+    \begin{minted}{text}
+true false true
+    \end{minted}
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Traits}
+    \begin{minted}[linenos]{rust}
+struct Rect { ... }
+impl PartialEq for Rect { ... }
+
+fn main() {
+    let rect = Rect { width: 3., height: 4.5 };
+    let circ = Circle { radius: 3. }
+
+    println("{}", rect.eq(&circ));
+}
+    \end{minted}
+    \vfill
+    Output:
+    \pause
+    \vfill
+    Compiler error. There is no \texttt{eq} method that takes a \texttt{\&Circle} argument.
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Traits}
+    \begin{minted}[linenos]{rust}
+struct Circle { ... }
+struct Rect { ... }
+impl PartialEq for Rect { ... }
+impl PartialEq<Circle> for Rect {
+    fn eq(&self, other: &Self) -> bool {
+        false
+    }
+}
+    \end{minted}
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Traits}
+    \begin{minted}[linenos]{rust}
+struct Circle { ... }
+struct Rect { ... }
+impl PartialEq for Rect { ... }
+impl PartialEq<Circle> for Rect { ... }
+fn main() {
+    let rect = Rect { width: 3., height: 4.5 };
+    let circ = Circle { radius: 3. }
+
+    println("{}", rect.eq(&circ), rect.ne(&circ));
+}
+    \end{minted}
+    \vfill
+    Output:
+    \pause
+    \vfill
+    \begin{minted}{text}
+false true
     \end{minted}
 \end{frame}
 
