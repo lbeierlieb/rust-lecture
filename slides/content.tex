@@ -5124,4 +5124,242 @@ false true
     \end{minted}
 \end{frame}
 
+\begin{frame}[fragile]
+    \frametitle{Traits}
+    \begin{minted}[linenos]{rust}
+struct Circle { ... }
+struct Rect { ... }
+impl PartialEq for Rect { ... }
+impl PartialEq<Circle> for Rect { ... }
+fn main() {
+    let rect = Rect { width: 3., height: 4.5 };
+    let circ = Circle { radius: 3. }
+
+    println("{}", rect == circ, rect != circ);
+}
+    \end{minted}
+    \vfill
+    Output:
+    \pause
+    \vfill
+    \begin{minted}{text}
+false true
+    \end{minted}
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Traits}
+    \begin{minted}[linenos]{rust}
+struct Circle { ... }
+struct Rect { ... }
+impl PartialEq for Rect { ... }
+impl PartialEq<Circle> for Rect { ... }
+fn main() {
+    let rect = Rect { width: 3., height: 4.5 };
+    let circ = Circle { radius: 3. }
+
+    println("{}", rect == circ, rect != rect);
+}
+    \end{minted}
+    \vfill
+    Output:
+    \pause
+    \vfill
+    \begin{minted}{text}
+false false
+    \end{minted}
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Traits}
+    The compiler interprets
+    \vfill
+    \begin{minted}[linenos]{rust}
+rect == circ
+    \end{minted}
+    \vfill
+    as
+    \vfill
+    \begin{minted}[linenos]{rust}
+Rect::eq(&rect, &circ)
+    \end{minted}
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Traits}
+    What is partial equality?
+    \pause
+    \vfill
+    \begin{itemize}
+        \item Symmetric: \texttt{a == b} => \texttt{b == a}
+        \item Transitive: \texttt{a == b} \& \texttt{b == c} => \texttt{a == c}
+    \end{itemize}
+    \pause
+    \vfill
+    The compiler cannot guarantee you fulfill the rules.
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Traits}
+    What is full equality?
+    \pause
+    \vfill
+    \begin{itemize}
+        \item Symmetric: \texttt{a == b} => \texttt{b == a}
+        \item Transitive: \texttt{a == b} \& \texttt{b == c} => \texttt{a == c}
+        \pause
+        \item Reflexive: \texttt{a == a}
+    \end{itemize}
+    \pause
+    \vfill
+    Partial equality is enough for the equality operator, but some algorithms rely on full equality.
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Traits}
+    There is a trait for full equality.
+    \pause
+    \vfill
+    \begin{minted}[linenos]{rust}
+trait Eq: PartialEq { }
+    \end{minted}
+    \pause
+    \vfill
+    \begin{itemize}
+        \item \texttt{Eq} requires an implementation of \texttt{PartialEq}.
+        \item \texttt{Eq} does not define any new functionality. It is a \textit{marker trait}.
+        \pause
+        \item Algorithms relying on full equality can specify \texttt{Eq} trait bounds.
+    \end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Traits}
+    \begin{itemize}
+        \item \texttt{f32} and \texttt{f64} do not implement full equality, because \texttt(NaN != NaN).
+        \item \texttt{Rect} or \texttt{Circ} must not implement full equality (unless they ensure a field cannot be \texttt{NaN}).
+        \pause
+        \vspace{.3cm}
+        \item The compiler cannot verify if an implementation is valid.
+    \end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Traits}
+    \begin{itemize}
+        \item Many standard traits have trivial implementations for \texttt{struct}s and \texttt{enum}s.
+        \item \texttt{derive} tell the compiler to generate default trait implementations for the specified lists.
+    \end{itemize}
+    \pause
+    \vfill
+    \begin{minted}[linenos]{rust}
+#[derive(PartialEq, Eq)]
+struct IntRect {
+    width: u64,
+    height: u64,
+}
+    \end{minted}
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Traits}
+    \begin{itemize}
+        \item Many standard traits have trivial implementations for \texttt{struct}s and \texttt{enum}s.
+        \item \texttt{derive} tell the compiler to generate default trait implementations for the specified lists.
+    \end{itemize}
+    \pause
+    \vfill
+    \begin{minted}[linenos]{rust}
+#[derive(PartialEq, Eq)]
+struct IntRect {
+    width: u64,
+    height: u64,
+}
+    \end{minted}
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Traits}
+    \begin{minted}[linenos]{rust}
+    trait Copy: Clone { }
+    \end{minted}
+\end{frame}
+good
+
+\begin{frame}[fragile]
+    \frametitle{Traits}
+    \begin{minted}[linenos]{rust}
+trait Clone: Sized {
+    fn clone(&self) -> Self;
+    fn clone_from(&mut self, source: &Self) { ... }
+}
+    \end{minted}
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Traits}
+    \begin{minted}[linenos]{rust}
+trait Clone: Sized {
+    fn clone(&self) -> Self;
+    fn clone_from(&mut self, source: &Self) { ... }
+}
+    \end{minted}
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Traits}
+    \begin{minted}[linenos]{rust}
+#[derive(Clone, Copy)]
+struct IntRect {
+    width: u64,
+    height: u64,
+}
+    \end{minted}
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Traits}
+    \begin{minted}[linenos]{rust}
+#[derive(Clone, Copy)]
+struct IntRect {
+    width: u64,
+    height: u64,
+}
+    \end{minted}
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Traits}
+    \begin{minted}[linenos]{rust}
+trait Debug {
+    fn fmt(&self, f: &mut Formatter<'_>) -> Result<(), Error>;
+}
+    \end{minted}
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Traits}
+    \begin{minted}[linenos]{rust}
+struct IntRect {
+    width: u64,
+    height: u64,
+}
+impl fmt::Debug for IntRect {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "IntRect [{} {}]", self.width, self.height)
+    }
+}
+    \end{minted}
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Traits}
+    \begin{minted}[linenos]{rust}
+#[derive(Debug)]
+struct IntRect {
+    width: u64,
+    height: u64,
+}
+    \end{minted}
+\end{frame}
 \end{document}
