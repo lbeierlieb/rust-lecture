@@ -4702,4 +4702,426 @@ impl<T> Option<T> {
         \item When a successful pop instruction has no outputs, our pop implementation is wrong. Panicking then is a reasonable choice.
     \end{itemize}
 \end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Traits}
+    We often encounter the case that many types implement the same functionality.
+    \begin{itemize}
+        \item Addition
+        \item Converting to a string (for printing)
+        \item Checking equality
+    \end{itemize}
+    \pause
+    \vfill
+    \textit{Traits} allow for to formalize shared functionality of different types.
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Traits}
+    We often encounter the case that many types implement the same functionality.
+    \begin{itemize}
+        \item Addition
+        \item Converting to a string (for printing)
+        \item Checking equality
+    \end{itemize}
+    \pause
+    \vfill
+    \textit{Traits} allow for to formalize shared functionality of different types.
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Traits}
+    We define the \texttt{Area} trait.
+    \vfill
+    \begin{minted}[linenos,fontsize=\small]{rust}
+trait Area {
+    fn area(&self) -> f64;
+}
+    \end{minted}
+    \pause
+    \vfill
+    Every type that implements this trait has to implement \texttt{area}.
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Traits}
+    \begin{minted}[linenos]{rust}
+struct Rect {
+    width: f64,
+    height: f64,
+}
+impl Area for Rect {
+    fn area(&self) -> f64 {
+        self.width * self.height
+    }
+}
+    \end{minted}
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Traits}
+    \begin{minted}[linenos]{rust}
+struct Triangle {
+    base: f64,
+    height: f64,
+}
+impl Area for Rect {
+    fn area(&self) -> f64 {
+        0.5 * base * height
+    }
+}
+    \end{minted}
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Traits}
+    \begin{minted}[linenos]{rust}
+struct Circle {
+    radius: f64
+}
+impl Area for Rect {
+    fn area(&self) -> f64 {
+        radius.powi(2) * std::f64::consts::PI
+    }
+}
+    \end{minted}
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Traits}
+    \begin{minted}[linenos]{rust}
+use std::f64::consts::PI;
+
+struct Circle {
+    radius: f64
+}
+impl Area for Rect {
+    fn area(&self) -> f64 {
+        radius.powi(2) * PI
+    }
+}
+    \end{minted}
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Traits}
+    \begin{minted}[linenos]{rust}
+use std::f64::consts::PI;
+
+struct Circle {
+    radius: f64
+}
+impl Area for Rect {
+    fn area(&self) -> f64 {
+        radius.powi(2) * PI
+    }
+}
+    \end{minted}
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Traits}
+    We can use a trait to introduce \texttt{trait bounds} to generic type parameters.
+    \begin{minted}[linenos]{rust}
+fn print_area<T: Area>(t: T) {
+    println!("The area is {}", t.area());
+}
+    \end{minted}
+    \pause
+    \vfill
+    \begin{itemize}
+        \item The caller can only choose types that implement the \texttt{Area} trait.
+        \item Inside the function, we can call of functions of \texttt{Area}.
+    \end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Traits}
+    A trait can specify functions and methods with default implementations.
+    \vfill
+    \begin{minted}[linenos]{rust}
+trait Area {
+    fn area(&self) -> f64;
+
+    fn double_area(&self) -> f64 {
+        self.area() * 2.
+    }
+}
+    \end{minted}
+    \pause
+    \vfill
+    Implementing types can override default implementations.
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Traits}
+    \begin{minted}[linenos]{rust}
+struct Rect {
+    width: f64,
+    height: f64,
+}
+impl Area for Rect {
+    fn area(&self) -> f64 {
+        self.width * self.height
+    }
+}
+fn main() {
+    let rect = Rect { width: 3., height: 4.5, };
+    println!("{}", rect.double_area());
+}
+    \end{minted}
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Traits}
+    We introduce another simple trait.
+    \vfill
+    \begin{minted}[linenos]{rust}
+trait Circumference {
+    fn circumference(&self) -> f64;
+}
+    \end{minted}
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Traits}
+    You can have multiple trait bounds on the same generic parameter.
+    \vfill
+    \begin{minted}[linenos]{rust}
+fn area_circumference_ratio<T: Area + Circumference>(t: T) -> f64 {
+    t.area() / t.circumference()
+}
+    \end{minted}
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Traits}
+    If the function signature becomes too cluttered, you can specify the trait bounds with \texttt{where}.
+    \vfill
+    \begin{minted}[linenos]{rust}
+fn area_circumference_ratio<T>(t: T) -> f64
+where
+    T: Area + Circumference,
+{
+    t.area() / t.circumference()
+}
+    \end{minted}
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Traits}
+    If a generic type parameter occurs only once in the signature, you can use \texttt{impl} syntax.
+    \vfill
+    \begin{minted}[linenos]{rust}
+fn area_circumference_ratio<T>(t: impl Area + Circumference) -> f64
+{
+    t.area() / t.circumference()
+}
+    \end{minted}
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Traits}
+    A trait can require an implementing type to implement other traits (\textit{supertraits}).
+    \vfill
+    \begin{minted}[linenos]{rust}
+trait AreaCircumferenceRatio: Area + Circumference {
+    fn area_circumference_ratio(&self) -> f64
+    {
+        self.area() / self.circumference()
+    }
+}
+    \end{minted}
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Traits}
+    \begin{minted}[linenos]{rust}
+struct Rect { ... }
+impl Area for Rect { ... }
+impl Circumference for Rect { ... }
+
+fn main() {
+    let rect = Rect { width: 3., height: 4.5, };
+    println!("{}", rect.area_circumference_ratio());
+}
+    \end{minted}
+    \vfill
+    Valid?
+    \pause
+    \vfill
+    Compiler error.
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Traits}
+    \begin{minted}[fontsize=\small]{text}
+error[E0599]: no method named `area_circumference_ratio` found for struct
+`Rect` in the current scope
+  --> src/main.rs:33:25
+   |
+22 | struct Rect {
+   | ----------- method `area_circumference_ratio` not found for this struct
+...
+33 |     println!("{}", rect.area_circumference_ratio());
+   |                         ^^^^^^^^^^^^^^^^^^^^^^^^ method not found in
+   |                                                  `Rect`
+   |
+   = help: items from traits can only be used if the trait is implemented
+           and in scope
+note: `AreaCircumferenceRatio` defines an item `area_circumference_ratio`,
+perhaps you need to implement it
+    \end{minted}
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Traits}
+    Even if there is nothing to implement, we need the \texttt{impl} block.
+    \vfill
+    \begin{minted}[linenos]{rust}
+struct Rect { ... }
+impl Area for Rect { ... }
+impl Circumference for Rect { ... }
+impl AreaCircumferenceRatio for Rect {}
+
+fn main() {
+    let rect = Rect { width: 3., height: 4.5, };
+    println!("{}", rect.area_circumference_ratio());
+}
+    \end{minted}
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Traits}
+    The standard library defines the trait \texttt{PartialEq}, which approximately is:
+    \vfill
+    \begin{minted}[linenos]{rust}
+pub const trait PartialEq<Rhs = Self> {
+    fn eq(&self, other: &Rhs) -> bool;
+
+    fn ne(&self, other: &Rhs) -> bool {
+        !self.eq(other)
+    }
+}
+    \end{minted}
+    \pause
+    \vfill
+    \texttt{Rhs} is a generic type parameter with a default.
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Traits}
+    Let us implement \texttt{PartialEq} for \texttt{Rect}.
+    \begin{minted}[linenos]{rust}
+struct Rect {
+    width: f64,
+    height: f64,
+}
+impl PartialEq for Rect {
+    fn eq(&self, other: &Self) -> bool {
+        self.width == other.width && self.height == other.height
+    }
+}
+    \end{minted}
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Traits}
+    \begin{minted}[linenos]{rust}
+struct Rect { ... }
+impl PartialEq for Rect { ... }
+
+fn main() {
+    let rect1 = Rect { width: 3., height: 4.5};
+    let rect2 = Rect { width: 4.5, height: 3.};
+
+    println("{} {} {}", rect1.eq(rect1), rect1.eq(rect2), rect1.ne(rect2));
+}
+    \end{minted}
+    \vfill
+    Output:
+    \pause
+    \vfill
+    Compiler error! We have to pass by reference.
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Traits}
+    \begin{minted}[linenos]{rust}
+struct Rect { ... }
+impl PartialEq for Rect { ... }
+
+fn main() {
+    let rect1 = Rect { width: 3., height: 4.5 };
+    let rect2 = Rect { width: 4.5, height: 3. };
+
+    println("{} {} {}", rect1.eq(&rect1), rect1.eq(&rect2), rect1.ne(&rect2));
+}
+    \end{minted}
+    \vfill
+    Output:
+    \pause
+    \vfill
+    \begin{minted}{text}
+true false true
+    \end{minted}
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Traits}
+    \begin{minted}[linenos]{rust}
+struct Rect { ... }
+impl PartialEq for Rect { ... }
+
+fn main() {
+    let rect = Rect { width: 3., height: 4.5 };
+    let circ = Circle { radius: 3. }
+
+    println("{}", rect.eq(&circ));
+}
+    \end{minted}
+    \vfill
+    Output:
+    \pause
+    \vfill
+    Compiler error. There is no \texttt{eq} method that takes a \texttt{\&Circle} argument.
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Traits}
+    \begin{minted}[linenos]{rust}
+struct Circle { ... }
+struct Rect { ... }
+impl PartialEq for Rect { ... }
+impl PartialEq<Circle> for Rect {
+    fn eq(&self, other: &Self) -> bool {
+        false
+    }
+}
+    \end{minted}
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Traits}
+    \begin{minted}[linenos]{rust}
+struct Circle { ... }
+struct Rect { ... }
+impl PartialEq for Rect { ... }
+impl PartialEq<Circle> for Rect { ... }
+fn main() {
+    let rect = Rect { width: 3., height: 4.5 };
+    let circ = Circle { radius: 3. }
+
+    println("{}", rect.eq(&circ), rect.ne(&circ));
+}
+    \end{minted}
+    \vfill
+    Output:
+    \pause
+    \vfill
+    \begin{minted}{text}
+false true
+    \end{minted}
+\end{frame}
+
 \end{document}
