@@ -5038,10 +5038,10 @@ struct Rect { ... }
 impl PartialEq for Rect { ... }
 
 fn main() {
-    let rect1 = Rect { width: 3., height: 4.5 };
-    let rect2 = Rect { width: 4.5, height: 3. };
+    let r1 = Rect { width: 3., height: 4.5 };
+    let r2 = Rect { width: 4.5, height: 3. };
 
-    println("{} {} {}", rect1.eq(&rect1), rect1.eq(&rect2), rect1.ne(&rect2));
+    println!("{} {} {}", r1.eq(&r1), r1.eq(&r2), r1.ne(&r2));
 }
     \end{minted}
     \vfill
