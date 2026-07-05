@@ -5136,29 +5136,6 @@ false true
 
 \begin{frame}[fragile]
     \frametitle{Traits}
-    \begin{minted}[linenos]{rust}
-struct Circle { ... }
-struct Rect { ... }
-impl PartialEq for Rect { ... }
-impl PartialEq<Circle> for Rect { ... }
-fn main() {
-    let rect = Rect { width: 3., height: 4.5 };
-    let circ = Circle { radius: 3. }
-
-    println("{}", rect == circ, rect != rect);
-}
-    \end{minted}
-    \vfill
-    Output:
-    \pause
-    \vfill
-    \begin{minted}{text}
-false false
-    \end{minted}
-\end{frame}
-
-\begin{frame}[fragile]
-    \frametitle{Traits}
     The compiler interprets
     \vfill
     \begin{minted}[linenos]{rust}
