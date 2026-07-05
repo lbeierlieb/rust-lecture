@@ -4805,22 +4805,6 @@ impl Area for Rect {
 
 \begin{frame}[fragile]
     \frametitle{Traits}
-    \begin{minted}[linenos]{rust}
-use std::f64::consts::PI;
-
-struct Circle {
-    radius: f64
-}
-impl Area for Rect {
-    fn area(&self) -> f64 {
-        radius.powi(2) * PI
-    }
-}
-    \end{minted}
-\end{frame}
-
-\begin{frame}[fragile]
-    \frametitle{Traits}
     We can use a trait to introduce \texttt{trait bounds} to generic type parameters.
     \begin{minted}[linenos]{rust}
 fn print_area<T: Area>(t: T) {
