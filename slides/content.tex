@@ -4806,6 +4806,7 @@ impl Area for Rect {
 \begin{frame}[fragile]
     \frametitle{Traits}
     We can use a trait to introduce \texttt{trait bounds} to generic type parameters.
+    \vfill
     \begin{minted}[linenos]{rust}
 fn print_area<T: Area>(t: T) {
     println!("The area is {}", t.area());
