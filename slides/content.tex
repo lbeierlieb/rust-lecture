@@ -5113,6 +5113,51 @@ false true
 
 \begin{frame}[fragile]
     \frametitle{Traits}
+    If we look at a similar example without method notation:
+    \vfill
+    \begin{minted}[linenos]{rust}
+struct Circle { ... }
+struct Rect { ... }
+impl PartialEq for Rect { ... }
+impl PartialEq<Circle> for Rect { ... }
+fn main() {
+    let rect = Rect { width: 3., height: 4.5 };
+    let circ = Circle { radius: 3. };
+
+    println!("{} {}", Rect::eq(&rect), Rect::eq(&circ));
+}
+    \end{minted}
+    \pause
+    \vfill
+    \begin{itemize}
+        \item It looks like \texttt{Rect::eq} is an overloaded function.
+        \item Based on the types of parameters and return value, the compiler tries to infer the correct function.
+    \end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Traits}
+    You can (and in ambigious cases must) specify the exact function:
+    \vfill
+    \begin{minted}[linenos]{rust}
+struct Circle { ... }
+struct Rect { ... }
+impl PartialEq for Rect { ... }
+impl PartialEq<Circle> for Rect { ... }
+fn main() {
+    let rect = Rect { width: 3., height: 4.5 };
+    let circ = Circle { radius: 3. };
+    println!(
+        "{} {}",
+        <Rect as PartialEq>::eq(&rect),
+        <Rect as PartialEq<Circle>>::eq(&circ)
+    );
+}
+    \end{minted}
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Traits}
     \begin{minted}[linenos]{rust}
 struct Circle { ... }
 struct Rect { ... }
