@@ -4981,7 +4981,7 @@ fn main() {
     The standard library defines the trait \texttt{PartialEq}, which approximately is:
     \vfill
     \begin{minted}[linenos]{rust}
-pub const trait PartialEq<Rhs = Self> {
+trait PartialEq<Rhs = Self> {
     fn eq(&self, other: &Rhs) -> bool;
 
     fn ne(&self, other: &Rhs) -> bool {
@@ -5062,7 +5062,7 @@ impl PartialEq for Rect { ... }
 
 fn main() {
     let rect = Rect { width: 3., height: 4.5 };
-    let circ = Circle { radius: 3. }
+    let circ = Circle { radius: 3. };
 
     println!("{}", rect.eq(&circ));
 }
@@ -5081,7 +5081,7 @@ struct Circle { ... }
 struct Rect { ... }
 impl PartialEq for Rect { ... }
 impl PartialEq<Circle> for Rect {
-    fn eq(&self, other: &Self) -> bool {
+    fn eq(&self, other: &Circle) -> bool {
         false
     }
 }
@@ -5097,7 +5097,7 @@ impl PartialEq for Rect { ... }
 impl PartialEq<Circle> for Rect { ... }
 fn main() {
     let rect = Rect { width: 3., height: 4.5 };
-    let circ = Circle { radius: 3. }
+    let circ = Circle { radius: 3. };
 
     println!("{} {}", rect.eq(&circ), rect.ne(&circ));
 }
@@ -5113,6 +5113,8 @@ false true
 
 \begin{frame}[fragile]
     \frametitle{Traits}
+    If we look at a similar example without method notation:
+    \vfill
     \begin{minted}[linenos]{rust}
 struct Circle { ... }
 struct Rect { ... }
@@ -5120,7 +5122,99 @@ impl PartialEq for Rect { ... }
 impl PartialEq<Circle> for Rect { ... }
 fn main() {
     let rect = Rect { width: 3., height: 4.5 };
-    let circ = Circle { radius: 3. }
+    let circ = Circle { radius: 3. };
+
+    println!("{} {}", Rect::eq(&rect), Rect::eq(&circ));
+}
+    \end{minted}
+    \pause
+    \vfill
+    \begin{itemize}
+        \item It looks like \texttt{Rect::eq} is an overloaded function.
+        \item Based on the types of parameters and return value, the compiler tries to infer the correct function.
+    \end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Traits}
+    You can (and in ambigious cases must) specify the exact function:
+    \vfill
+    \begin{minted}[linenos]{rust}
+struct Circle { ... }
+struct Rect { ... }
+impl PartialEq for Rect { ... }
+impl PartialEq<Circle> for Rect { ... }
+fn main() {
+    let rect = Rect { width: 3., height: 4.5 };
+    let circ = Circle { radius: 3. };
+    println!(
+        "{} {}",
+        <Rect as PartialEq>::eq(&rect),
+        <Rect as PartialEq<Circle>>::eq(&circ)
+    );
+}
+    \end{minted}
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Traits}
+    \begin{minted}[linenos]{rust}
+struct Circle { ... }
+struct Rect { ... }
+impl PartialEq for Rect { ... }
+impl<T> PartialEq<T> for Rect {
+    fn eq(&self, other: &T) -> bool {
+        false
+    }
+}
+    \end{minted}
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Traits}
+    \begin{minted}[linenos]{rust}
+struct Circle { ... }
+struct Rect { ... }
+impl PartialEq for Rect { ... }
+impl<T> PartialEq<T> for Rect { ... }
+fn main() {
+    let rect = Rect { width: 3., height: 4.5 };
+    let circ = Circle { radius: 3. };
+
+    println!("{} {}", rect.eq(&circ), rect.ne(&circ));
+}
+    \end{minted}
+    \vfill
+    Output:
+    \pause
+    \vfill
+    Compiler error!
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Traits}
+    \begin{minted}{text}
+error[E0119]: conflicting implementations of trait `PartialEq` for type `Rect`
+ --> src/main.rs:8:1
+  |
+3 | impl PartialEq for Rect { 
+  | ----------------------- first implementation here
+...
+8 | impl<T> PartialEq<T> for Rect {
+  | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ conflicting implementation for `Rect`
+    \end{minted}
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Traits}
+    \begin{minted}[linenos]{rust}
+struct Circle { ... }
+struct Rect { ... }
+impl PartialEq for Rect { ... }
+impl PartialEq<Circle> for Rect { ... }
+fn main() {
+    let rect = Rect { width: 3., height: 4.5 };
+    let circ = Circle { radius: 3. };
 
     println!("{} {}", rect == circ, rect != circ);
 }
