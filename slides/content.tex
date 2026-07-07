@@ -5062,7 +5062,7 @@ impl PartialEq for Rect { ... }
 
 fn main() {
     let rect = Rect { width: 3., height: 4.5 };
-    let circ = Circle { radius: 3. }
+    let circ = Circle { radius: 3. };
 
     println!("{}", rect.eq(&circ));
 }
@@ -5097,7 +5097,7 @@ impl PartialEq for Rect { ... }
 impl PartialEq<Circle> for Rect { ... }
 fn main() {
     let rect = Rect { width: 3., height: 4.5 };
-    let circ = Circle { radius: 3. }
+    let circ = Circle { radius: 3. };
 
     println!("{} {}", rect.eq(&circ), rect.ne(&circ));
 }
@@ -5169,7 +5169,7 @@ impl PartialEq for Rect { ... }
 impl PartialEq<Circle> for Rect { ... }
 fn main() {
     let rect = Rect { width: 3., height: 4.5 };
-    let circ = Circle { radius: 3. }
+    let circ = Circle { radius: 3. };
 
     println!("{} {}", rect == circ, rect != circ);
 }
