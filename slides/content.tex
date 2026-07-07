@@ -5081,7 +5081,7 @@ struct Circle { ... }
 struct Rect { ... }
 impl PartialEq for Rect { ... }
 impl PartialEq<Circle> for Rect {
-    fn eq(&self, other: &Self) -> bool {
+    fn eq(&self, other: &Circle) -> bool {
         false
     }
 }
