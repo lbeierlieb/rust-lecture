@@ -4981,7 +4981,7 @@ fn main() {
     The standard library defines the trait \texttt{PartialEq}, which approximately is:
     \vfill
     \begin{minted}[linenos]{rust}
-pub const trait PartialEq<Rhs = Self> {
+trait PartialEq<Rhs = Self> {
     fn eq(&self, other: &Rhs) -> bool;
 
     fn ne(&self, other: &Rhs) -> bool {
