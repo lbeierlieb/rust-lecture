@@ -5419,4 +5419,2160 @@ struct IntRect {
 }
     \end{minted}
 \end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Traits}
+    \begin{minted}[linenos]{rust}
+struct IntRect {
+    width: u64,
+    height: u64,
+}
+impl fmt::Debug for IntRect {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "IntRect [{} {}]", self.width, self.height)
+    }
+}
+    \end{minted}
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Traits}
+    \begin{minted}[linenos]{rust}
+trait Default: Sized {
+    fn default() -> Self;
+}
+    \end{minted}
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Traits}
+    \begin{minted}[linenos]{rust}
+struct IntRect {
+    width: u64,
+    height: u64,
+}
+
+impl Default for IntRect {
+    fn default() -> Self {
+        Self {
+            width: u64::default(),
+            height: u64::default(),
+        }
+    }
+}
+    \end{minted}
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Traits}
+    You can derive this implementation (if all fields implement \texttt{Default}).
+    \vfill
+    \begin{minted}[linenos]{rust}
+#[derive(Default)]
+struct IntRect {
+    width: u64,
+    height: u64,
+}
+    \end{minted}
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Traits}
+    Example use case of the \texttt{Default} trait:
+    \vfill
+    \begin{minted}[linenos]{rust}
+impl<T> Option<T> {
+    fn unwrap_or_default(self) -> T
+        where
+            T: Default,
+        {
+            match self {
+                Some(x) => x,
+                None => T::default(),
+            }
+        }
+    }
+}
+    \end{minted}
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Traits}
+    Other standard traits we now skip over:
+    \vfill
+    \begin{itemize}
+        \item \texttt{trait PartialOrd<Rhs = Self>: PartialEq<Rhs>} --- some values are comparable.
+        \item \texttt{trait Ord: Eq + PartialOrd} --- all values are comparable.
+        \pause
+        \item \texttt{trait Hash} --- generate hash.
+        \pause
+        \item \texttt{Display} --- text representation that \texttt{println!("{}")} uses (derive not possible).
+    \end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Traits}
+    \begin{itemize}
+        \item \texttt{Sized} is a special trait, which the compiler treats uniquely.
+        \item \texttt{Sized} is a marker trait stating that the size of the type is known at compile time.
+        \item The compiler places only sized types on the stack.
+        \pause
+        \item All types we have discussed so far implement \texttt{Sized}.
+        \item The compiler automatically implements the trait for your \texttt{enum}s and \texttt{struct}s (if possible).
+        \pause
+        \item Exceptions
+        \begin{itemize}
+            \item \texttt{[T]} --- slices
+            \item \texttt{str} --- string slices
+            \item \texttt{dyn SomeTrait} --- trait objects
+            \item \texttt{struct}s whose last field is unsized
+        \end{itemize}
+        \pause
+        \item Unsized types can only live behind pointers/references.
+    \end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Traits}
+    We explore the slice type next; starting off with arrays.
+    \vfill
+    \begin{minted}[linenos]{rust}
+fn sum(values: [u64; 30]) -> u64 {
+    let mut i = 0;
+    let mut sum = 0;
+
+    while i < 30 {
+        sum += values[i];
+        i += 1;
+    }
+
+    sum
+}
+    \end{minted}
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Traits}
+    \begin{center}
+        \begin{tikzpicture}
+            \node[above] at (1.75, 0) {stack};
+            \drawbox{0}{-0.0}{3.5}{0.5}{\ldots}
+            \drawbox{0}{-0.5}{3.5}{1.5}{Caller's array}
+            \drawbox{0}{-2}{3.5}{0.5}{\ldots}
+            \drawbox{0}{-2.5}{3.5}{1.5}{\texttt{values}}
+            \drawbox{0}{-4}{3.5}{0.5}{return address}
+            \drawbox{0}{-4.5}{3.5}{0.5}{saved RBP}
+            \drawbox{0}{-5}{3.5}{0.5}{sum}
+            \drawbox{0}{-5.5}{3.5}{0.5}{i}
+            \draw[->, dotted] (1.75,-6) -- (1.75,-6.3);
+        \end{tikzpicture}
+    \end{center}
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Traits}
+    A reference to an array avoids copying.
+    \vfill
+    \begin{minted}[linenos]{rust}
+fn sum(values: &[u64; 30]) -> u64 {
+    let mut i = 0;
+    let mut sum = 0;
+
+    while i < 30 {
+        sum += values[i];
+        i += 1;
+    }
+
+    sum
+}
+    \end{minted}
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Traits}
+    \begin{center}
+        \begin{tikzpicture}
+            \node[above] at (1.75, 0) {stack};
+            \drawbox{0}{-0.0}{3.5}{0.5}{\ldots}
+            \drawbox{0}{-0.5}{3.5}{1.5}{Caller's array}
+            \drawbox{0}{-2}{3.5}{0.5}{\ldots}
+            \drawbox{0}{-2.5}{3.5}{0.5}{return address}
+            \drawbox{0}{-3}{3.5}{0.5}{saved RBP}
+            \drawbox{0}{-3.5}{3.5}{0.5}{sum}
+            \drawbox{0}{-4}{3.5}{0.5}{i}
+            \draw[->, dotted] (1.75,-4.5) -- (1.75,-5);
+            \drawbox{-6}{-2}{2}{0.5}{RDI}
+            \drawbox{-4}{-2}{2}{0.5}{}
+            \draw[->] (-2.5,-2.25) -- (-1,-2.25) -- (-1, -2) -- (0, -2);
+        \end{tikzpicture}
+    \end{center}
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Traits}
+    We now take a reference to a slice.
+    \vfill
+    \begin{minted}[linenos]{rust}
+fn sum(values: &[u64]) -> u64 {
+    let mut i = 0;
+    let mut sum = 0;
+
+    while i < values.len() {
+        sum += values[i];
+        i += 1;
+    }
+
+    sum
+}
+    \end{minted}
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Traits}
+    \begin{center}
+        \begin{tikzpicture}
+            \node[above] at (1.75, 0) {stack};
+            \drawbox{0}{-0.0}{3.5}{0.5}{\ldots}
+            \drawbox{0}{-0.5}{3.5}{1.5}{Caller's array}
+            \drawbox{0}{-2}{3.5}{0.5}{\ldots}
+            \drawbox{0}{-2.5}{3.5}{0.5}{return address}
+            \drawbox{0}{-3}{3.5}{0.5}{saved RBP}
+            \drawbox{0}{-3.5}{3.5}{0.5}{sum}
+            \drawbox{0}{-4}{3.5}{0.5}{i}
+            \draw[->, dotted] (1.75,-4.5) -- (1.75,-5);
+            \drawbox{-6}{-2}{2}{0.5}{RDI}
+            \drawbox{-4}{-2}{2}{0.5}{}
+            \draw[->] (-2.5,-2.25) -- (-1,-2.25) -- (-1, -2) -- (0, -2);
+            \drawbox{-6}{-2.5}{2}{0.5}{RSI}
+            \drawbox{-4}{-2.5}{2}{0.5}{\texttt{len}}
+        \end{tikzpicture}
+    \end{center}
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Traits}
+    \begin{minted}[linenos]{rust}
+fn sum(values: &[u64]) -> u64 { ... }
+
+fn main() {
+    let array = [10; 30];
+    let sum1 = sum(&array);
+    let sum2 = sum(&array[10..12]);
+    let sum3 = sum(&array[10..]);
+    let sum4 = sum(&array[..5]);
+    let sum5 = sum(&array[..]);
+    println!("{sum1} {sum2} {sum3} {sum4} {sum5} {:?}", &array[..3]);
+}
+    \end{minted}
+    \vfill
+    Output:
+    \pause
+    \vfill
+    \begin{minted}{text}
+300 20 200 50 300 [10, 10, 10]
+    \end{minted}
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Traits}
+    \begin{minted}[linenos]{rust}
+fn debug_print<T: std::fmt::Debug>(t: &T) {
+    println!("{:?}", t);
+}
+fn main() {
+    debug_print(&3);
+    debug_print(&false);
+    debug_print(&[10; 30][..5]);
+}
+    \end{minted}
+    \vfill
+    Output:
+    \pause
+    \vfill
+    Compiler error.
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Traits}
+    \begin{minted}[fontsize=\scriptsize]{text}
+error[E0277]: the size for values of type `[{integer}]` cannot be known at compilation time
+ --> src/main.rs:7:17
+  |
+7 |     debug_print(&[10; 30][..5]);
+  |     ----------- ^^^^^^^^^^^^^^ doesn't have a size known at compile-time
+  |     |
+  |     required by a bound introduced by this call
+  |
+  = help: the trait `Sized` is not implemented for `[{integer}]`
+note: required by an implicit `Sized` bound in `debug_print`
+ --> src/main.rs:1:16
+  |
+1 | fn debug_print<T: std::fmt::Debug>(t: &T) {
+  |                ^ required by the implicit `Sized` requirement on this type parameter in
+                     `debug_print`
+help: consider relaxing the implicit `Sized` restriction
+  |
+1 | fn debug_print<T: std::fmt::Debug + ?Sized>(t: &T) {
+  |                                   ++++++++
+    \end{minted}
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Traits}
+    Every generic type parameter automatically has a \texttt{Sized} trait bound.
+    \pause
+    \vfill
+    \begin{minted}[linenos]{rust}
+fn debug_print<T: std::fmt::Debug>(t: &T) {
+    println!("{:?}", t);
+}
+    \end{minted}
+    \pause
+    \vfill
+    is equivalent to
+    \vfill
+    \begin{minted}[linenos]{rust}
+fn debug_print<T: std::fmt::Debug + Sized>(t: &T) {
+    println!("{:?}", t);
+}
+    \end{minted}
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Traits}
+    You can remove this trait bound with \texttt{?Sized}.
+    \pause
+    \vfill
+    \begin{minted}[linenos]{rust}
+fn debug_print<T: std::fmt::Debug + ?Sized>(t: &T) {
+    println!("{:?}", t);
+}
+fn main() {
+    debug_print(&[10;30][..5]);
+}
+    \end{minted}
+    \vfill
+    Output:
+    \pause
+    \begin{minted}{text}
+[10, 10, 10, 10, 10]
+    \end{minted}
+    \pause
+    \vfill
+    \texttt{Sized} is the only trait supporting the \texttt{?} trait-bound syntax.
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Traits}
+    We can now understand why \texttt{Clone} required \texttt{Sized}.
+    \pause
+    \vfill
+    \begin{minted}[linenos]{rust}
+trait Clone: Sized {
+    fn clone(&self) -> Self;
+    fn clone_from(&mut self, source: &Self) { ... }
+}
+    \end{minted}
+    \pause
+    \vfill
+    Returning an owned value of \texttt{Self} requires that the size of the type is known at compile time.
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Traits}
+    \texttt{str}---the string slice---is another unsized type.
+    \pause
+    \vfill
+    \begin{minted}[linenos]{rust}
+fn main() {
+    let str1 = "hello";
+    let str2: &str = "world";
+    let str3: &'static str = "!";
+}
+    \end{minted}
+    \pause
+    \vfill
+    We used this type in every \texttt{println!} call!
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Traits}
+    \begin{center}
+        \begin{tikzpicture}
+            \node[above] at (1.75, 0) {stack};
+            \drawbox{0}{-0.0}{3.5}{1}{\ldots}
+            \drawbox{0}{-1}{3.5}{0.5}{saved RBP}
+            \drawbox{0}{-1.5}{3.5}{0.5}{\texttt{str1 ptr}}
+            \drawbox{0}{-2}{3.5}{0.5}{\texttt{str1 len}: 5}
+            \draw[->] (2.8,-1.75) -- (4.5,-1.75) -- (4.5, -1.8) -- (5.5, -1.8);
+            \drawbox{0}{-2.5}{3.5}{0.5}{\texttt{str2 ptr}}
+            \drawbox{0}{-3}{3.5}{0.5}{\texttt{str2 len}: 5}
+            \draw[->] (2.8,-2.75) -- (4.5,-2.75) -- (4.5, -3.7) -- (5.5, -3.7);
+            \drawbox{0}{-3.5}{3.5}{0.5}{\texttt{str3 ptr}}
+            \drawbox{0}{-4}{3.5}{0.5}{\texttt{str3 len}: 1}
+            \draw[->] (2.8,-3.75) -- (4.5,-3.75) -- (4.5, -4.8) -- (5.5, -4.8);
+            \draw[->, dotted] (1.75,-4.5) -- (1.75,-5);
+            \drawbox{5.5}{-0.6}{3.5}{1.2}{\texttt{"hello"}}
+            \drawbox{5.5}{-2.5}{3.5}{1.2}{\texttt{"world"}}
+            \drawbox{5.5}{-4.4}{3.5}{0.4}{\texttt{"!"}}
+            \node[above] at (1.75+5.5, 0) {rodata};
+            \node[above] at (1.75+5.5, -0.5) {\ldots};
+            \node[above] at (1.75+5.5, -2.3) {\ldots};
+            \node[above] at (1.75+5.5, -4.2) {\ldots};
+        \end{tikzpicture}
+    \end{center}
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Traits}
+    \begin{minted}[linenos]{rust}
+fn main() {
+    let str1 = &"hello Rust!"[..6];
+    let str2 = &"The whole world!"[11..];
+    println!("{str1}{str2}");
+}
+    \end{minted}
+    \vfill
+    Output:
+    \pause
+    \vfill
+    \begin{minted}{text}
+hello orld!
+    \end{minted}
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Traits}
+    \begin{minted}[linenos]{rust}
+fn main() {
+    let str1 = &"hello Rust!"[..6];
+    let str2 = &"Thé whöle world!"[11..];
+    println!("{str1}{str2}");
+}
+    \end{minted}
+    \vfill
+    Output:
+    \pause
+    \vfill
+    \begin{minted}{text}
+hello  world!
+    \end{minted}
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Traits}
+    The characters in \texttt{str} are encoded with UTF-8.
+    \begin{center}
+        \begin{tikzpicture}
+            \node[left] at (0, 0.5) {offset};
+            \node[left] at (0, -0.5) {memory};
+            \node[left] at (0, -1.5) {character};
+            \drawbox{0}{-0.0}{1}{1}{0x54}
+            \node[below] at (0.5, -1.2) {'T'};
+            \node[above] at (0.5, 0.2) {0};
+            \drawbox{1}{-0.0}{1}{1}{0x68}
+            \node[below] at (1.5, -1.2) {'h'};
+            \node[above] at (1.5, 0.2) {1};
+            \drawbox{2}{-0.0}{1}{1}{0xc3}
+            \node[below] at (3, -1.2) {'é'};
+            \node[above] at (2.5, 0.2) {2};
+            \drawbox{3}{-0.0}{1}{1}{0xa9}
+            \node[above] at (3.5, 0.2) {3};
+            \drawbox{4}{-0.0}{1}{1}{0x20}
+            \node[below] at (4.5, -1.2) {' '};
+            \node[above] at (4.5, 0.2) {4};
+            \drawbox{5}{-0.0}{1}{1}{0x77}
+            \node[below] at (5.5, -1.2) {'w'};
+            \node[above] at (5.5, 0.2) {5};
+            \drawbox{6}{-0.0}{1}{1}{0x68}
+            \node[below] at (6.5, -1.2) {'h'};
+            \node[above] at (6.5, 0.2) {6};
+            \drawbox{7}{-0.0}{1}{1}{0xc3}
+            \node[below] at (8, -1.2) {'ö'};
+            \node[above] at (7.5, 0.2) {7};
+            \drawbox{8}{-0.0}{1}{1}{0xb6}
+            \node[above] at (8.5, 0.2) {8};
+            \drawbox{9}{-0.0}{1}{1}{0x6c}
+            \node[below] at (9.5, -1.2) {'l'};
+            \node[above] at (9.5, 0.2) {9};
+            \drawbox{10}{-0.0}{1}{1}{0x65}
+            \node[below] at (10.5, -1.2) {'e'};
+            \node[above] at (10.5, 0.2) {10};
+            \drawbox{11}{-0.0}{1}{1}{0x20}
+            \node[below] at (11.5, -1.2) {' '};
+            \node[above] at (11.5, 0.2) {11};
+            \drawbox{12}{-0.0}{1}{1}{0x77}
+            \node[below] at (12.5, -1.2) {'w'};
+            \node[above] at (12.5, 0.2) {12};
+            \node[right] at (13, -0.5) {\ldots};
+        \end{tikzpicture}
+    \end{center}
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Traits}
+    \begin{minted}[linenos]{rust}
+fn main() {
+    let str1 = &"Thé whöle world!"[11..];
+    println!("{} {}", str1[0], str1[2]);
+}
+    \end{minted}
+    \vfill
+    Output:
+    \pause
+    \vfill
+    Compiler error.
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Traits}
+    \begin{minted}{text}
+error[E0277]: the type `str` cannot be indexed by `{integer}`
+   --> src/main.rs:3:28
+    |
+  3 |     println!("{} {}", str1[0], str1[2]);
+    |                            ^ string indices are ranges of `usize`
+    |
+    = help: the trait `SliceIndex<str>` is not implemented for `{integer}`
+    = note: you can use `.chars().nth()` or `.bytes().nth()`
+            for more information, see chapter 8 in The Book: <https://...  
+    \end{minted}
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Traits}
+    \begin{itemize}
+        \item Next up, we will discover trait objects.
+        \item We start with a familiar example.
+    \end{itemize}
+    \pause
+    \vfill
+    \begin{minted}[linenos]{rust}
+trait Shape {
+    fn area(&self) -> f64;
+    fn circumference(&self) -> f64;
+}
+struct Rect { ... }
+impl Shape for Rect { ... }
+struct Circle { ... }
+impl Shape for Circle { ... }
+    \end{minted}
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Traits}
+    \begin{minted}[linenos]{rust}
+fn sum_area<T: Shape>(shapes: &[T]) -> f64 {
+    let mut i = 0;
+    let mut sum = 0.;
+
+    while i < shapes.len() {
+        sum += shape[i].area();
+        i += 1;
+    }
+
+    sum
+}
+    \end{minted}
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Traits}
+    \begin{minted}[linenos]{rust}
+fn sum_area<T: Shape>(shapes: &[T]) -> f64 { ... }
+    \end{minted}
+    \pause
+    \vfill
+    When we call this with a slice of \texttt{Rect}s, the compiler creates (monomorphization):
+    \begin{minted}[linenos]{rust}
+fn sum_area(shapes: &[Rect]) -> f64 { ... }
+    \end{minted}
+    \pause
+    \vfill
+    When we call this with a slice of \texttt{Circle}s, the compiler creates:
+    \begin{minted}[linenos]{rust}
+fn sum_area(shapes: &[Circle]) -> f64 { ... }
+    \end{minted}
+    \pause
+    \vfill
+    Using a generic parameters, we cannot accept a slice containing different types implementing \texttt{Shape}.
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Traits}
+    Trait objects are the solution to this limitation.
+    \vfill
+    \begin{minted}[linenos]{rust}
+fn sum_area(shapes: &[&dyn Shape]) -> f64 {
+    let mut i = 0;
+    let mut sum = 0.;
+
+    while i < shapes.len() {
+        sum += shape[i].area();
+        i += 1;
+    }
+
+    sum
+}
+    \end{minted}
+\end{frame}
+
+% memory view of trait objects
+\begin{frame}[fragile]
+    \frametitle{Traits}
+    \begin{center}
+        \begin{tikzpicture}
+            \drawbox{-6}{-2}{2}{0.5}{RDI}
+            \drawbox{-4}{-2}{2}{0.5}{}
+            \draw[->] (-2.5,-2.25) -- (-1,-2.25) -- (-1, -4) -- (0, -4);
+            \drawbox{-6}{-2.5}{2}{0.5}{RSI}
+            \drawbox{-4}{-2.5}{2}{0.5}{\texttt{len}}
+
+            \node[above] at (2, 0) {somewhere};
+            \drawbox{0}{-0.0}{4}{0.5}{\texttt{shapes[3]} data ptr}
+            \draw[->] (3.8,-0.25) -- (4.5,-0.25) -- (4.5, 0.5) -- (5.5, 0.5);
+            \drawbox{0}{-0.5}{4}{0.5}{\texttt{shapes[3]} vtable ptr}
+            \draw[->, dashed] (3.8,-0.75) -- (4.3,-0.75) -- (4.3, -3.5) -- (5.5, -3.5);
+            \drawbox{0}{-1.0}{4}{0.5}{\texttt{shapes[2]} data ptr}
+            \draw[->] (3.8,-1.25) -- (4.5,-1.25) -- (4.5, -0.5) -- (5.5, -0.5);
+            \drawbox{0}{-1.5}{4}{0.5}{\texttt{shapes[2]} vtable ptr}
+            \draw[->, dotted] (3.8,-1.75) -- (4.8,-1.75) -- (4.8, -4.5) -- (5.5, -4.5);
+            \drawbox{0}{-2.0}{4}{0.5}{\texttt{shapes[1]} data ptr}
+            \draw[->] (3.8,-2.25) -- (4.6,-2.25) -- (4.6, -1) -- (5.5, -1);
+            \drawbox{0}{-2.5}{4}{0.5}{\texttt{shapes[1]} vtable ptr}
+            \draw[->, dashed] (3.8,-2.75) -- (4.9,-2.75) -- (4.9, -3.4) -- (5.5, -3.5);
+            \drawbox{0}{-3.0}{4}{0.5}{\texttt{shapes[0]} data ptr}
+            \draw[->] (3.8,-3.25) -- (4.7,-3.25) -- (4.7, -1.5) -- (5.5, -1.5);
+            \drawbox{0}{-3.5}{4}{0.5}{\texttt{shapes[0]} vtable ptr}
+            \draw[->, dashed] (3.8,-3.75) -- (4.9,-3.75) -- (4.9, -3.6) -- (5.5, -3.5);
+
+            \node[above] at (5.5+1.5, 1) {somewhere else};
+            \drawbox{5.5}{1.0}{3}{0.5}{\texttt{Circ}}
+            \drawbox{5.5}{0.5}{3}{1}{\texttt{Rect}}
+            \drawbox{5.5}{-0.5}{3}{0.5}{\texttt{Circ}}
+            \drawbox{5.5}{-1}{3}{0.5}{\texttt{Circ}}
+
+            \node[above] at (5.5+1.5, -2.5) {.rodata};
+            \drawbox{5.5}{-2.5}{3}{1}{vtable}
+            \drawbox{5.5}{-3.5}{3}{1}{vtable}
+        \end{tikzpicture}
+    \end{center}
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Traits}
+    \begin{minted}[linenos]{rust}
+use std::fmt::Debug;
+
+fn print_with_areas(shapes: &[&dyn Shape + Debug]) {
+    let mut i = 0;
+    while i < shapes.len() {
+        println!("{:?}: {}", shapes[i], shapes[i].area());
+        i += 1;
+    }
+}
+    \end{minted}
+    \vfill
+    Valid?
+    \pause
+    Yes.
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Traits}
+    We end the excursion to unsized types and look at another ubiquitous trait.
+    \vfill
+    \begin{minted}[linenos]{rust}
+trait Iterator {
+    type Item;
+
+    fn next(&mut self) -> Option<Self::Item>;
+}
+    \end{minted}
+    \pause
+    \vfill
+    \begin{itemize}
+        \item \texttt{type Item} defines an \textit{associated type}.
+        \item Each implementation has to choose a type for \texttt{Item}.
+    \end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Traits}
+    \begin{minted}[linenos, fontsize=\small]{rust}
+#[derive(Default)]
+struct BasicIterator(u8);
+impl Iterator for BasicIterator {
+    type Item = char;
+    fn next(&mut self) -> Option<char> {
+        let item = match self.0 {
+            0 => Some('h'),
+            1 => Some('i'),
+            _ => None,
+        };
+        if item.is_some() {
+          self.0 += 1;
+        }
+        item
+    }
+}
+    \end{minted}
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Traits}
+    \begin{minted}[linenos]{rust}
+fn main() {
+    let mut iterator = BasicIterator::default();
+
+    loop {
+        match iterator.next() {
+            None => break,
+            Some(item) => println!("{}", item),
+        }
+    }
+}
+    \end{minted}
+    \vfill
+    Output:
+    \pause
+    \begin{minted}{text}
+h
+i
+    \end{minted}
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Traits}
+    An example that is useful in practice:
+    \begin{minted}[linenos,fontsize=\small]{rust}
+struct RangeUsize {
+    start: usize,
+    end: usize,
+};
+impl Iterator for RangeUsize{
+    type Item = usize;
+    fn next(&mut self) -> Option<usize> {
+        if start < end {
+            let item = self.start;
+            self.start += 1;
+            Some(item)
+        } else {
+            None
+        }
+    }
+}
+    \end{minted}
+    \vfill
+    Output:
+    \pause
+    \begin{minted}{text}
+h
+i
+    \end{minted}
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Traits}
+    \begin{minted}[linenos]{rust}
+fn main() {
+    let mut iterator = RangeUsize { start: 0, end: 5 };
+
+    loop {
+        match iterator.next() {
+            None => break,
+            Some(item) => print!("{}", item),  // print!: no newline
+        }
+    }
+}
+    \end{minted}
+    \vfill
+    Output:
+    \pause
+    \begin{minted}{text}
+01234
+    \end{minted}
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Traits}
+    \begin{itemize}
+        \item The standard library offers a generic version with \texttt{std::ops::Range}.
+        \item The syntactic sugar \texttt{start..end} creates such a \texttt{Range}.
+    \end{itemize}
+    \pause
+    \vfill
+    \begin{minted}[linenos,fontsize=\small]{rust}
+use std::ops::Range;
+fn main() {
+    let mut range1 = Range { start: 0, end: 5 };
+    let mut range2 = 0..5;
+    loop {
+        match range2.next() {
+            None => break,
+            Some(item) => print!("{}", item),
+        }
+    }
+}
+    \end{minted}
+    \pause
+    \vfill
+    Output:
+    \begin{minted}{text}
+01234
+    \end{minted}
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Traits}
+    Let's revisit a data structure from the exercises (but generic).
+    \pause
+    \vfill
+    \begin{minted}[linenos]{rust}
+struct BoundedStack<T, const N: usize> {
+    stackpointer: usize,
+    data: [T; N],
+}
+    \end{minted}
+    \pause
+    \vfill
+    Implementing \texttt{Iterator} on \texttt{BoundedStack} itself is awkward.
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Traits}
+    We implement a separate type to iterate through a stack.
+    \pause
+    \vfill
+    \begin{minted}[linenos, fontsize=\small]{rust}
+struct StackIter<T, const N: usize> {
+    i: usize,
+    data: [T; N],
+}
+impl<T, const N: usize> Iterator for StackIter<T, N> {
+    type Item = T;
+    fn next(&mut self) -> Option<T> {
+        if self.i > 0 {
+            self.i -= 1;
+            Some(self.data[self.i])
+        } else { None }
+    }
+}
+    \end{minted}
+    \pause
+    \vfill
+    Valid?
+    \pause
+    Compiler error.
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Traits}
+    \begin{minted}[fontsize=\small]{text}
+error[E0507]: cannot move out of `self.data[_]` which is behind a mutable ref.
+  --> src/lib.rs:10:18
+   |
+10 |             Some(self.data[self.i])
+   |                  ^^^^^^^^^^^^^^^^^ move occurs because `self.data[_]` has
+                                        type `T`, which does not implement the
+                                        `Copy` trait
+   |
+help: if `T` implemented `Clone`, you could clone the value
+  --> src/lib.rs:5:6
+   |
+ 5 | impl<T, const N: usize> Iterator for StackIter<T, N> {
+   |      ^ consider constraining this type parameter with `Clone`
+...
+10 |             Some(self.data[self.i])
+   |                  ----------------- you could clone this value
+    \end{minted}
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Traits}
+    \begin{minted}[linenos, fontsize=\small]{rust}
+struct StackIter<T, const N: usize> {
+    i: usize,
+    data: [T; N],
+}
+impl<T: Copy, const N: usize> Iterator for StackIter<T, N> {
+    type Item = T;
+    fn next(&mut self) -> Option<T> {
+        if self.i > 0 {
+            self.i -= self.1;
+            Some(self.data[self.i])
+        } else {
+            None
+        }
+    }
+}
+    \end{minted}
+    \pause
+    \vfill
+    Valid?
+    \pause
+    Yes. You can create \texttt{StackIter} with non-copyable \texttt{T} but won't be able call \texttt{next}.
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Traits}
+    \begin{minted}[linenos, fontsize=\small]{rust}
+struct StackIter<T: Copy, const N: usize> {
+    i: usize,
+    data: [T; N],
+}
+impl<T: Copy, const N: usize> Iterator for StackIter<T, N> {
+    type Item = T;
+    fn next(&mut self) -> Option<T> {
+        if self.i > 0 {
+            self.i -= self.1;
+            Some(self.data[self.i])
+        } else {
+            None
+        }
+    }
+}
+    \end{minted}
+    \pause
+    \vfill
+    Valid?
+    \pause
+    Yes. Now you can only create a \texttt{StackIter} with copyable \texttt{T}.
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Traits}
+    \begin{minted}[linenos, fontsize=\small]{rust}
+struct StackIter<T: Copy, const N: usize> {
+    i: usize,
+    data: [T; N],
+}
+impl<T, const N: usize> Iterator for StackIter<T, N> {
+    type Item = T;
+    fn next(&mut self) -> Option<T> {
+        if self.i > 0 {
+            self.i -= 1;
+            Some(self.data[self.i])
+        } else {
+            None
+        }
+    }
+}
+    \end{minted}
+    \pause
+    \vfill
+    Valid?
+    \pause
+    Compiler error.
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Traits}
+    \begin{minted}[fontsize=\small]{text}
+error[E0277]: the trait bound `T: Copy` is not satisfied
+ --> src/lib.rs:7:5
+  |
+7 |     fn next(&mut self) -> Option<T> {
+  |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ the trait `Copy` is not implemented
+  |                                     for `T`
+  |
+note: required by a bound in `StackIter`
+ --> src/lib.rs:1:21
+  |
+1 | struct StackIter<T: Copy, const N: usize> {
+  |                     ^^^^ required by this bound in `StackIter`
+help: consider restricting type parameter `T` with trait `Copy`
+  |
+5 | impl<T: std::marker::Copy, const N: usize> Iterator for StackIter<T, N> {
+  |       +++++++++++++++++++
+    \end{minted}
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Traits}
+    \begin{minted}[linenos]{rust}
+impl<T: Copy, const N: usize> BoundedStack<T, N> {
+    fn into_iter(self) -> StackIter<T, N> {
+        StackIter {
+            i: self.stackpointer,
+            data: self.data,
+        }
+    }
+}
+    \end{minted}
+    \pause
+    \vfill
+    Valid?
+    \pause
+    Yes.
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Traits}
+    \begin{minted}[linenos,fontsize=\small]{rust}
+fn main() {
+    let stack = BoundedStack {
+        stackpointer: 3,
+        data: [13, 9, 18, 0, 0],
+    };
+    let iterator = stack.into_iter();
+    
+    loop {
+        match iterator.next() {
+            None => break,
+            Some(item) => print!("{} ", item),
+        }
+    }
+}
+    \end{minted}
+    \pause
+    \vfill
+    Output:
+    \pause
+    \vfill
+    Compiler error. \texttt{next()} requires a mutable reference.
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Traits}
+    \begin{minted}[linenos]{rust}
+fn main() {
+    let stack = BoundedStack {
+        stackpointer: 3,
+        data: [13, 9, 18, 0, 0],
+    };
+    let mut iterator = stack.into_iter();
+    loop {
+        match iterator.next() {
+            None => break,
+            Some(item) => print!("{} ", item),
+        }
+    }
+}
+    \end{minted}
+    \pause
+    \vfill
+    Output:
+    \pause
+    \vfill
+    \begin{minted}{text}
+18 9 13  
+    \end{minted}
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Traits}
+    \begin{itemize}
+        \item Wanting an iterator of a data structure is common.
+        \item Rust has the \texttt{IntoIterator} trait, which requires the \texttt{into\_iter()} method.
+    \end{itemize}
+    \pause
+    \vfill
+    \begin{minted}[linenos]{rust}
+trait IntoIterator {
+    type Item;
+    type IntoIter: Iterator<Item = Self::Item>;
+
+    fn into_iter(self) -> Self::IntoIter;
+}
+    \end{minted}
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Traits}
+    \begin{minted}[linenos]{rust}
+impl<T: Copy, const N: usize> IntoIterator for BoundedStack<T, N> {
+    type Item = T;
+    type IntoIter = StackIter<T, N>;
+    
+    fn into_iter(self) -> StackIter<T, N> {
+        StackIter {
+            i: self.stackpointer,
+            data: self.data,
+        }
+    }
+}
+    \end{minted}
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Traits}
+    Our main function works exactly the same.
+    \vfill
+    \begin{minted}[linenos]{rust}
+fn main() {
+    let stack = BoundedStack {
+        stackpointer: 3,
+        data: [13, 9, 18, 0, 0],
+    };
+    let mut iterator = stack.into_iter();
+    loop {
+        match iterator.next() {
+            None => break,
+            Some(item) => print!("{} ", item),
+        }
+    }
+}
+    \end{minted}
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Traits}
+    \begin{minted}[linenos]{rust}
+fn main() {
+    let stack = BoundedStack {
+        stackpointer: 3,
+        data: [13, 9, 18, 0, 0],
+    };
+
+    for item in stack {
+        print!("{} ", item);
+    }
+}
+    \end{minted}
+    \pause
+    \vfill
+    \begin{itemize}
+        \item The \texttt{for} loop calls \texttt{into\_iter()} and loops through all items.
+        \item Like \texttt{while}, \texttt{for} loops are expressions always returning \texttt{()}.
+    \end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Traits}
+    \begin{minted}[linenos]{rust}
+fn main() {
+    for i in 3..7 {
+        print!("{} ", i);
+    }
+}
+    \end{minted}
+    \vfill
+    Output:
+    \pause
+    \begin{minted}{text}
+3 4 5 6
+    \end{minted}
+    \pause
+    \vfill
+    But why? We saw that \texttt{3..7} implements \texttt{Iterator}, not \texttt{IntoIterator}.
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Traits}
+    The standard library offer a \textit{blanket implementation} of \texttt{IntoIterator} for every \texttt{Iterator}.
+    \pause
+    \vfill
+    \begin{minted}[linenos]{rust}
+impl<T: Iterator> IntoIterator for T {
+    type Item = T::Item;
+    type IntoIter = T;
+
+    fn into_iter(self) -> T {
+        self
+    }
+}
+    \end{minted}
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Traits}
+    \begin{minted}[linenos]{rust}
+fn main() {
+    for i in (3..7).into_iter().into_iter() {
+        print!("{} ", i);
+    }
+}
+    \end{minted}
+    \vfill
+    Output:
+    \pause
+    \begin{minted}{text}
+3 4 5 6
+    \end{minted}
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Traits}
+    What if we want to iterate through the stack contents but later continue using the stack?
+    \pause
+    \vfill
+    \begin{minted}[linenos, fontsize=\small]{rust}
+struct StackIterRef<'a, T> {
+    i: usize,
+    data: &'a [T],
+}
+impl<'a, T> Iterator for StackIterRef<'a, T> {
+    type Item = &'a T;
+    fn next(&mut self) -> Option<&'a T> {
+        if self.i > 0 {
+            self.i -= 1;
+            Some(&self.data[self.i])
+        } else {
+            None
+        }
+    }
+}
+    \end{minted}
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Traits}
+    \begin{minted}[linenos]{rust}
+impl<'a, T, const N: usize> IntoIterator for &'a BoundedStack<T, N> {
+    type Item = &'a T;
+    type IntoIter = StackIterRef<'a, T>;
+    
+    fn into_iter(self) -> StackIterRef<'a, T> {
+        StackIterRef {
+            i: self.stackpointer,
+            data: &self.data,
+        }
+    }
+}
+    \end{minted}
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Traits}
+    \begin{minted}[linenos]{rust}
+fn main() {
+    let stack = BoundedStack {
+        stackpointer: 3,
+        data: [13, 9, 18, 0, 0],
+    };
+
+    for item in &stack {
+        print!("{} ", item);
+    }
+}
+    \end{minted}
+    \vfill
+    Output:
+    \pause
+    \begin{minted}{text}
+18 9 13 
+    \end{minted}
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Traits}
+    \begin{minted}[linenos]{rust}
+fn main() {
+    let stack = BoundedStack {
+        stackpointer: 3,
+        data: [13, 9, 18, 0, 0],
+    };
+
+    for item in &stack {
+        print!("{:p} ", item);
+    }
+}
+    \end{minted}
+    \vfill
+    Output:
+    \pause
+    \begin{minted}{text}
+0x7ffc93c94bf8 0x7ffc93c94bf4 0x7ffc93c94bf0 
+    \end{minted}
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Traits}
+    \begin{minted}[linenos]{rust}
+fn main() {
+    let stack = BoundedStack {
+        stackpointer: 3,
+        data: [13, 9, 18, 0, 0],
+    };
+    for item in stack {
+        print!("{} ", item);
+    }
+    println!("{}", stack.stackpointer);
+}
+    \end{minted}
+    \vfill
+    Output:
+    \pause
+    \vfill
+    Compiler error.
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Traits}
+    \begin{minted}[fontsize=\scriptsize]{text}
+error[E0382]: use of moved value: `stack`
+   --> src/main.rs:74:5
+    |
+ 65 |     let stack = BoundedStack {
+    |         ----- move occurs because `stack` has type `BoundedStack<i32, 5>`, which does not ...
+...
+ 70 |     for item in stack {
+    |                 ----- `stack` moved due to this implicit call to `.into_iter()`
+...
+ 74 |     stack.stackpointer;
+    |     ^^^^^^^^^^^^^^^^^^ value used here after move
+    |
+note: `into_iter` takes ownership of the receiver `self`, which moves `stack`
+   --> /playground/.rustup/toolchains/stable-x86_64-unknown-linux-gnu/lib/rustlib/src/rust/ ...
+    |
+312 |     fn into_iter(self) -> Self::IntoIter;
+    |                  ^^^^
+help: consider iterating over a slice of the `BoundedStack<i32, 5>`'s content to avoid moving ...
+    |
+ 70 |     for item in &stack {
+    |                 +
+    \end{minted}
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Traits}
+    \begin{minted}[linenos]{rust}
+fn main() {
+    let stack = BoundedStack {
+        stackpointer: 3,
+        data: [13, 9, 18, 0, 0],
+    };
+    for item in &stack {
+        print!("{} ", item);
+    }
+    println!("{}", stack.stackpointer);
+}
+    \end{minted}
+    \vfill
+    Output:
+    \pause
+    \begin{minted}{text}
+18 9 13 3
+    \end{minted}
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Traits}
+    We look at a few examples of iterators from the standard library.
+    \vfill
+    \begin{minted}[linenos]{rust}
+fn main() {
+    let arr = [3, 5, 7];
+    for item in arr {
+        print!("{} ", item);
+    }
+}
+    \end{minted}
+    \vfill
+    Output:
+    \pause
+    \begin{minted}{text}
+3 5 7 
+    \end{minted}
+    \pause
+    \vfill
+    Type of \texttt{item}:
+    \pause
+    \texttt{i32}
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Traits}
+    \begin{minted}[linenos]{rust}
+fn main() {
+    let mut arr = [3, 5, 7];
+    let slice = &mut arr[0..2];
+    for item in slice {
+        item += 1;
+        print!("{} ", item);
+    }
+}
+    \end{minted}
+    \vfill
+    Output:
+    \pause
+    Compiler error.
+    \pause
+    \vfill
+    Type of \texttt{item}:
+    \pause
+    \texttt{\&mut i32}
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Traits}
+    \begin{minted}{text}
+error[E0368]: binary assignment operation `+=` cannot be applied to type
+`&mut {integer}`
+  --> src/main.rs:73:9
+   |
+73 |         item += 1;
+   |         ----^^^^^
+   |         |
+   |         cannot use `+=` on type `&mut {integer}`
+   |
+help: `+=` can be used on `{integer}` if you dereference the left-hand
+side
+   |
+73 |         *item += 1;
+   |         +
+    \end{minted}
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Traits}
+    \begin{minted}[linenos]{rust}
+fn main() {
+    let mut arr = [3, 5, 7];
+    let slice = &mut arr[0..2];
+    for item in slice {
+        *item += 1;
+        print!("{} ", item);
+    }
+}
+    \end{minted}
+    \vfill
+    Output:
+    \pause
+    \begin{minted}{text}
+4 6
+    \end{minted}
+\end{frame}
+
+
+\begin{frame}[fragile]
+    \frametitle{Traits}
+    \begin{minted}[linenos]{rust}
+fn main() {
+    let text = "hellö";
+    for item in text {
+        print!("{} ", item);
+    }
+}
+    \end{minted}
+    \vfill
+    Output:
+    \pause
+    Compiler error.
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Traits}
+    \begin{minted}{text}
+error[E0277]: `&str` is not an iterator
+ --> src/main.rs:3:17
+  |
+3 |     for item in text {
+  |                 ^^^^ `&str` is not an iterator; try calling `.chars()` or `.bytes()`
+  |
+  = help: the trait `Iterator` is not implemented for `&str`
+  = note: required for `&str` to implement `IntoIterator`
+    \end{minted}
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Traits}
+    \begin{minted}[linenos]{rust}
+fn main() {
+    let text = "hellö";
+    for item in text.chars() {
+        print!("{} ", item);
+    }
+}
+    \end{minted}
+    \vfill
+    Output:
+    \pause
+    \begin{minted}{text}
+h e l l ö 
+    \end{minted}
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Traits}
+    \begin{minted}[linenos]{rust}
+fn main() {
+    let text = "hellö";
+    for item in text.bytes() { // item is u8
+        print!("{} ", item);
+    }
+}
+    \end{minted}
+    \vfill
+    Output:
+    \pause
+    \begin{minted}{text}
+104 101 108 108 195 182
+    \end{minted}
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Traits}
+    We want to implement useful functions for iterators.
+    \vfill
+    \begin{itemize}
+        \item Transform every item into something else.
+        \item Filter out items based on a condition.
+        \item Find maximum value of all items.
+        \item Sum up all items.
+    \end{itemize}
+    \pause
+    \vfill
+    For the first two, we need to pass functions as function arguments.
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Traits}
+    \begin{minted}[linenos]{rust}
+fn print_something() {
+    println!("hello");
+}
+
+fn main() {
+    let func: fn() = print_something;
+    func();
+}
+    \end{minted}
+    \vfill
+    Output:
+    \pause
+    \begin{minted}{text}
+hello
+    \end{minted}
+    \pause
+    \vfill
+    \texttt{fn} types are proper Rust types.
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Traits}
+    \begin{minted}[linenos]{rust}
+fn print_something() -> &str {
+    "hello"
+}
+
+fn main() {
+    let func: fn() -> &str = print_something;
+    let text = func();
+    func("{}", text);
+}
+    \end{minted}
+    \vfill
+    Output:
+    \pause
+    Compiler error.
+    \pause
+    \vfill
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Traits}
+    \begin{minted}{text}
+error[E0106]: missing lifetime specifier
+ --> src/main.rs:1:25
+  |
+1 | fn print_something() -> &str {
+  |                         ^ expected named lifetime parameter
+  |
+  = help: this function's return type contains a borrowed value, but there
+          is no value for it to be borrowed from
+help: consider using the `'static` lifetime, but this is uncommon unless
+you're returning a borrowed value from a `const` or a `static`
+  |
+1 | fn print_something() -> &'static str {
+  |                          +++++++
+    \end{minted}
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Traits}
+    \begin{minted}[linenos]{rust}
+fn print_something() -> &'static str {
+    "hello"
+}
+
+fn main() {
+    let func: fn() -> &'static str = print_something;
+    let text = func();
+    println!("{}", text);
+}
+    \end{minted}
+    \vfill
+    Output:
+    \pause
+    \begin{minted}{text}
+hello
+    \end{minted}
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Traits}
+    Rust offers anonymous functions called \textit{closures}.
+    \pause
+    \vfill
+    \begin{minted}[linenos]{rust}
+fn main() {
+    let inc: fn(u64) -> u64 = |x| x + 1;
+    let inc_by_ref: fn(&mut u64) = |u64ref| *u64ref += 1;
+
+    let x = 0;
+    let y = inc(x);
+    let mut z = y;
+    inc_by_ref(&mut z);
+
+    println!("{x} {y} {z}");
+}
+    \end{minted}
+    \vfill
+    Output:
+    \pause
+    \begin{minted}{text}
+0 1 2
+    \end{minted}
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Traits}
+    \begin{minted}[linenos]{rust}
+fn for_each<I: Iterator>(iter: I, f: fn(I::Item)) {
+    for item in iter {
+        f(item);
+    }
+}
+fn main() {
+    for_each(3..7, |num| print!("{num} "));
+}
+    \end{minted}
+    \vfill
+    Output:
+    \pause
+    \begin{minted}{text}
+3 4 5 6 
+    \end{minted}
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Traits}
+    \begin{minted}[linenos]{rust}
+fn for_each<I: Iterator>(iter: I, f: fn(I::Item)) {
+    for item in iter {
+        f(item);
+    }
+}
+fn main() {
+    let prefix = 3;
+    for_each(3..5, |num| println!("{prefix} {num}"));
+}
+    \end{minted}
+    \vfill
+    Output:
+    \pause
+    Compiler error.
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Traits}
+    \begin{minted}[fontsize=\small]{text}
+error[E0308]: mismatched types
+ --> src/main.rs:8:20
+  |
+8 |     for_each(3..5, |num| println!("{prefix} {num}"));
+  |     --------       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ expected fn pointer,
+                                                        found closure
+  |     |
+  |     arguments to this function are incorrect
+  |
+  = note: expected fn pointer `fn({integer})`
+                found closure `{closure@src/main.rs:8:20: 8:25}`
+note: closures can only be coerced to `fn` types if they do not capture any
+variables
+ --> src/main.rs:8:37
+  |
+8 |     for_each(3..5, |num| println!("{prefix} {num}"));
+  |                                     ^^^^^^ `prefix` captured here
+    \end{minted}
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Traits}
+    \begin{minted}[linenos]{rust}
+let prefix = "number:";
+let closure = |num| println!("{} {num}");
+    \end{minted}
+    \vfill
+    is treated by the compiler similar to:
+    \pause
+    \vfill
+    \begin{minted}[linenos, fontsize=\small]{rust}
+struct<'a> Closure {
+    prefix: &'a i32,
+}
+impl<'a> Closure {
+    fn call(&self, args: (i32,)) {
+        println!("{} {}", *prefix, args.0);
+    }
+}
+fn main() {
+    let prefix = "number:";
+    let closure = Closure { prefix: &prefix };
+}
+    \end{minted}
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Traits}
+    There are three traits these closures can implement.
+    \vfill
+    \begin{itemize}
+        \item \texttt{FnOnce}
+        \item \texttt{FnMut}
+        \item \texttt{Fn}
+    \end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Traits}
+    The \texttt{FnOnce} trait describes a function that is callable once.
+    \vfill
+    \begin{minted}[linenos]{rust}
+trait FnOnce<Args: Tuple> {
+    type Output;
+
+    fn call_once(self, args: Args) -> Self::Output;
+}
+    \end{minted}
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Traits}
+    The \texttt{FnMut} trait describes a function that is callable multiple times and can mutate its state.
+    \vfill
+    \begin{minted}[linenos]{rust}
+trait FnMut<Args: Tuple>: FnOnce<Args> {
+    fn call_mut(&mut self, args: Args) -> Self::Output;
+}
+    \end{minted}
+    \pause
+    \vfill
+    Every multiple-times callable function is also callable once!
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Traits}
+    The \texttt{Fn} trait describes a function that is callable multiple times and cannot mutate its state.
+    \vfill
+    \begin{minted}[linenos]{rust}
+trait Fn<Args: Tuple>: FnMut<Args> {
+    fn call(&self, args: Args) -> Self::Output;
+}
+    \end{minted}
+    \pause
+    \vfill
+    Every multiple-times callable function that does not mutate its state could be function that is allowed to mutate but does not.
+    Also, it is function that can be called once.
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Traits}
+    \begin{minted}[linenos]{rust}
+fn for_each<I, F>(iter: I, f: F)
+where
+    I: Iterator,
+    F: Fn<(I::Item,)>,
+{
+    for item in iter {
+        f(item);
+    }
+}
+fn main() {
+    for_each(3..7, |num| print!("{num} "));
+}
+    \end{minted}
+    \vfill
+    Output:
+    \pause
+    \vfill
+    Compiler error.
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Traits}
+    \begin{minted}{text}
+error[E0658]: the precise format of `Fn`-family traits' type parameters is
+subject to change
+ --> src/main.rs:4:8
+  |
+4 |     F: Fn<(I::Item,)>,
+  |        ^^^^^^^^^^^^^^ help: use parenthetical notation instead:
+                          `Fn(I::Item) -> ()`
+  |
+  = note: see issue #29625 <https://github.com/rust-lang/rust/issues/29625>
+    for more information
+    \end{minted}
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Traits}
+    \begin{minted}[linenos]{rust}
+fn for_each<I, F>(iter: I, f: F)
+where
+    I: Iterator,
+    F: Fn(I::Item),
+{
+    for item in iter {
+        f(item);
+    }
+}
+fn main() {
+    for_each(3..7, |num| print!("{num} "));
+}
+    \end{minted}
+    \vfill
+    Output:
+    \pause
+    \begin{minted}{text}
+3 4 5 6
+    \end{minted}
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Traits}
+    \begin{minted}[linenos, fontsize=\small]{rust}
+fn for_each<I, F>(iter: I, f: F)
+where
+    I: Iterator,
+    F: Fn(I::Item),
+{
+    for item in iter {
+        f(item);
+    }
+}
+fn main() {
+    for_each(3..7, |num| {
+        print!("{num} ");
+        3
+    });
+}
+    \end{minted}
+    \vfill
+    Output:
+    \pause
+    Compiler error. \texttt{Fn(I::Item)} is equivalent to \texttt{Fn(I::Item) -> ()}.
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Traits}
+    \begin{minted}[linenos, fontsize=\small]{rust}
+fn for_each<I, F, R>(iter: I, f: F)
+where
+    I: Iterator,
+    F: Fn(I::Item) -> R,
+{
+    for item in iter {
+        f(item);
+    }
+}
+fn main() {
+    for_each(3..7, |num| {
+        print!("{num} ");
+        3
+    });
+}
+    \end{minted}
+    \vfill
+    Here we can pass any function with the correct parameters; the return value does not matter.
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Traits}
+    \begin{minted}[linenos, fontsize=\small]{rust}
+fn for_each<I, F>(iter: I, f: F)
+where
+    I: Iterator,
+    F: Fn(I::Item),
+{ ... }
+fn main() {
+    let mut array = [3, 5, 7];
+    for_each((&mut array).into_iter(), |refmut| *refmut += 1);
+    for_each(array.into_iter(), |num| print!("{num} "));
+}
+    \end{minted}
+    \vfill
+    Output:
+    \pause
+    \begin{minted}{text}
+4 6 8
+    \end{minted}
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Traits}
+    \begin{minted}[linenos, fontsize=\small]{rust}
+fn for_each<I, F>(iter: I, f: F)
+where
+    I: Iterator,
+    F: Fn(I::Item),
+{ ... }
+fn main() {
+    let mut array = [3, 5, 7];
+    let mut offset = 0;
+    for_each((&mut array).into_iter(), |refmut| {
+        *refmut += offset;
+        offset += 1;
+    });
+    for_each(array.into_iter(), |num| print!("{num} "));
+}
+    \end{minted}
+    \vfill
+    Output:
+    \pause
+    \vfill
+    Compiler error.
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Traits}
+    \begin{minted}[fontsize=\footnotesize]{text}
+error[E0594]: cannot assign to `offset`, as it is a captured variable in a `Fn` closure
+  --> src/main.rs:16:9
+   |
+ 2 | fn for_each<I, F>(iter: I, f: F)
+   |                               - change this to accept `FnMut` instead of `Fn`
+...
+13 |     let mut offset = 0;
+   |         ---------- `offset` declared here, outside the closure
+14 |     for_each((&mut array).into_iter(), |refmut| {
+   |     --------                           -------- in this closure
+   |     |
+   |     expects `Fn` instead of `FnMut`
+15 |         *refmut += offset;
+16 |         offset += 1;
+   |         ^^^^^^^^^^^ cannot assign
+    \end{minted}
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Traits}
+    \begin{minted}[linenos, fontsize=\small]{rust}
+fn for_each<I, F>(iter: I, mut f: F)
+where
+    I: Iterator,
+    F: FnMut(I::Item),
+{ ... }
+fn main() {
+    let mut array = [3, 5, 7];
+    let mut offset = 0;
+    for_each((&mut array).into_iter(), |refmut| {
+        *refmut += offset;
+        offset += 1;
+    });
+    for_each(array.into_iter(), |num| print!("{num} "));
+}
+    \end{minted}
+    \vfill
+    Output:
+    \pause
+    \vfill
+    \begin{minted}{text}
+3 6 9
+    \end{minted}
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Traits}
+    \begin{minted}[linenos, fontsize=\small]{rust}
+fn for_each<I, F>(iter: I, f: F)
+where
+    I: Iterator,
+    F: FnOnce(I::Item),
+{
+    for item in iter {
+        f(item);
+    }
+}
+    \end{minted}
+    \vfill
+    Valid?
+    \pause
+    \vfill
+    Compiler error.
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Traits}
+    \begin{minted}[fontsize=\small]{text}
+error[E0382]: use of moved value: `f`
+ --> src/main.rs:7:9
+  |
+1 | fn for_each<I, F>(iter: I, f: F)
+  |                            - move occurs because `f` has type `F`, which
+                                 does not implement the `Copy` trait
+...
+6 |     for item in iter {
+  |     ---------------- inside of this loop
+7 |         f(item);
+  |         ^------
+  |         |
+  |         `f` moved due to this call, in previous iteration of loop
+  |
+note: `FnOnce` closures can only be called once
+    \end{minted}
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Traits}
+    \begin{minted}[linenos]{rust}
+fn unwrap_or_else<T, F>(option: Option<T>, f: F) -> T
+where
+    F: FnOnce() -> T,
+{ ... }
+
+struct NonCopy(u8);
+fn main() {
+    let value = NonCopy(0);
+    unwrap_or_else(None, || value);
+}
+    \end{minted}
+    \pause
+    \vfill
+    Valid?
+    \pause
+    Yes. \texttt{Fn} and \texttt{FnMut} would not accept the closure, because it has to take the ownership of \texttt{value}.
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Traits}
+    \begin{itemize}
+        \item The \texttt{Iterator} trait offers a default implementation for \texttt{for\_each}.
+        \item \texttt{unwrap\_or\_else} is a method defined on \texttt{Option}.
+    \end{itemize}
+    \pause
+    \vfill
+    \begin{minted}[linenos]{rust}
+fn main() {
+    "hello".chars().for_each(|c| print!("{c} "));
+
+    let x = Some(3).unwrap_or_(10);
+    let x = Some(3).unwrap_or_else(|| {
+        // expensive operation to calculate default value
+        10
+    });
+}
+    \end{minted}
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Traits}
+    Let's implement a \texttt{map} function for \texttt{Iterator}. Example usage:
+    \vfill
+    \begin{minted}[linenos]{rust}
+fn main() {
+    let iter = map(0..5, |num| num.pow(2));
+    iter.for_each(|num| print!("{num} "));
+}
+    \end{minted}
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Traits}
+    Let's implement a \texttt{map} function for \texttt{Iterator}. Example usage:
+    \vfill
+    \begin{minted}[linenos]{rust}
+fn main() {
+    let iter = map(0..5, |num: u64| num.pow(2));
+    iter.for_each(|num| print!("{num} "));
+
+    // expected output:
+    // 0 1 4 9 16
+}
+    \end{minted}
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Traits}
+    \begin{minted}[linenos]{rust}
+<insert map live coding result>
+    \end{minted}
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Traits}
+    Let's implement a \texttt{filter} function for \texttt{Iterator}. Example usage:
+    \vfill
+    \begin{minted}[linenos]{rust}
+fn main() {
+    let iter = filter(0..10, |num: u64| filter.is_multiple_of(2));
+    iter.for_each(|num| print!("{num} "));
+
+    // expected output:
+    // 0 2 4 6 8
+}
+    \end{minted}
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Traits}
+    \begin{minted}[linenos]{rust}
+<insert filter live coding result>
+    \end{minted}
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Traits}
+    Let's implement a \texttt{max} function for \texttt{Iterator}. Example usage:
+    \vfill
+    \begin{minted}[linenos]{rust}
+fn main() {
+    let array = [23, 4783, 3, 12];
+    let largest = max(array.into_iter());
+    println!("{largest}");
+
+    // expected output:
+    // 4783
+}
+    \end{minted}
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Traits}
+    \begin{minted}[linenos]{rust}
+<insert max live coding result>
+    \end{minted}
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Traits}
+    Let's implement a \texttt{sum} function for \texttt{Iterator}. Example usage:
+    \vfill
+    \begin{minted}[linenos]{rust}
+fn main() {
+    let array = [23, 4783, 3, 12];
+    let array_sum = sum(array.into_iter());
+    println!("{array_sum}");
+
+    // expected output:
+    // 4783
+}
+    \end{minted}
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Traits}
+    \begin{minted}[linenos]{rust}
+<insert sum live coding result>
+    \end{minted}
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Traits}
+    \texttt{map}, \texttt{filter}, \texttt{max}, and \texttt{sum} exist in similar form as default methods of the \texttt{Iterator} trait.
+    \pause
+    \vfill
+    \begin{minted}[linenos]{rust}
+fn main() {
+    let sum_of_squares_of_evens: u64 = (0..100)
+        .filter(|i: &u64| i.is_multiple_of(2))
+        .map(|i| i.pow(2))
+        .sum();
+    println!("{sum_of_squares_of_evens}");
+}
+    \end{minted}
+\end{frame}
+
 \end{document}
