@@ -7461,18 +7461,6 @@ fn main() {
     \vfill
     \begin{minted}[linenos]{rust}
 fn main() {
-    let iter = map(0..5, |num| num.pow(2));
-    iter.for_each(|num| print!("{num} "));
-}
-    \end{minted}
-\end{frame}
-
-\begin{frame}[fragile]
-    \frametitle{Traits}
-    Let's implement a \texttt{map} function for \texttt{Iterator}. Example usage:
-    \vfill
-    \begin{minted}[linenos]{rust}
-fn main() {
     let iter = map(0..5, |num: u64| num.pow(2));
     iter.for_each(|num| print!("{num} "));
 
