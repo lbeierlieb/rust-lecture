@@ -6950,15 +6950,13 @@ fn print_something() -> &str {
 fn main() {
     let func: fn() -> &str = print_something;
     let text = func();
-    func("{}", text);
+    println!("{}", text);
 }
     \end{minted}
     \vfill
     Output:
     \pause
     Compiler error.
-    \pause
-    \vfill
 \end{frame}
 
 \begin{frame}[fragile]
@@ -7092,8 +7090,8 @@ variables
 \begin{frame}[fragile]
     \frametitle{Traits}
     \begin{minted}[linenos]{rust}
-let prefix = "number:";
-let closure = |num| println!("{} {num}");
+let prefix = 3;
+let closure = |num| println!("{prefix} {num}");
     \end{minted}
     \vfill
     is treated by the compiler similar to:
@@ -7109,7 +7107,7 @@ impl<'a> Closure {
     }
 }
 fn main() {
-    let prefix = "number:";
+    let prefix = 3;
     let closure = Closure { prefix: &prefix };
 }
     \end{minted}
@@ -7448,23 +7446,11 @@ fn main() {
 fn main() {
     "hello".chars().for_each(|c| print!("{c} "));
 
-    let x = Some(3).unwrap_or_(10);
+    let x = Some(3).unwrap_or(10);
     let x = Some(3).unwrap_or_else(|| {
         // expensive operation to calculate default value
         10
     });
-}
-    \end{minted}
-\end{frame}
-
-\begin{frame}[fragile]
-    \frametitle{Traits}
-    Let's implement a \texttt{map} function for \texttt{Iterator}. Example usage:
-    \vfill
-    \begin{minted}[linenos]{rust}
-fn main() {
-    let iter = map(0..5, |num| num.pow(2));
-    iter.for_each(|num| print!("{num} "));
 }
     \end{minted}
 \end{frame}
@@ -7487,13 +7473,55 @@ fn main() {
 \begin{frame}[fragile]
     \frametitle{Traits}
     \begin{minted}[linenos]{rust}
-<insert map live coding result>
+struct MapIter<I, F, R>
+where
+    I: Iterator,
+    F: FnMut(I::Item) -> R,
+{
+    iter: I,
+    f: F,
+}
     \end{minted}
 \end{frame}
 
 \begin{frame}[fragile]
     \frametitle{Traits}
-    Let's implement a \texttt{filter} function for \texttt{Iterator}. Example usage:
+    \begin{minted}[linenos,fontsize=\small]{rust}
+impl<I, F, R> Iterator for MapIter<I, F, R>
+where
+    I: Iterator,
+    F: FnMut(I::Item) -> R,
+{
+    type Item = R;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        let f = &mut self.f;
+        let item = self.iter.next();
+        match item {
+            Some(item) => Some(f(item)),
+            None => None,
+        }
+    }
+}
+    \end{minted}
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Traits}
+    \begin{minted}[linenos]{rust}
+fn map<I, F, R>(iter: I, f: F) -> MapIter<I, F, R>
+where
+    I: Iterator,
+    F: FnMut(I::Item) -> R,
+{
+    MapIter { iter, f }
+}
+    \end{minted}
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Traits}
+    Exercise for the reader: Implement a \texttt{filter} function for \texttt{Iterator}. Example usage:
     \vfill
     \begin{minted}[linenos]{rust}
 fn main() {
@@ -7508,14 +7536,7 @@ fn main() {
 
 \begin{frame}[fragile]
     \frametitle{Traits}
-    \begin{minted}[linenos]{rust}
-<insert filter live coding result>
-    \end{minted}
-\end{frame}
-
-\begin{frame}[fragile]
-    \frametitle{Traits}
-    Let's implement a \texttt{max} function for \texttt{Iterator}. Example usage:
+    Exercise for the reader: Implement a \texttt{max} function for \texttt{Iterator}. Example usage:
     \vfill
     \begin{minted}[linenos]{rust}
 fn main() {
@@ -7531,14 +7552,7 @@ fn main() {
 
 \begin{frame}[fragile]
     \frametitle{Traits}
-    \begin{minted}[linenos]{rust}
-<insert max live coding result>
-    \end{minted}
-\end{frame}
-
-\begin{frame}[fragile]
-    \frametitle{Traits}
-    Let's implement a \texttt{sum} function for \texttt{Iterator}. Example usage:
+    Exercise for the reader: Implement a \texttt{sum} function for \texttt{Iterator}. Example usage:
     \vfill
     \begin{minted}[linenos]{rust}
 fn main() {
@@ -7549,13 +7563,6 @@ fn main() {
     // expected output:
     // 4783
 }
-    \end{minted}
-\end{frame}
-
-\begin{frame}[fragile]
-    \frametitle{Traits}
-    \begin{minted}[linenos]{rust}
-<insert sum live coding result>
     \end{minted}
 \end{frame}
 
@@ -7573,6 +7580,11 @@ fn main() {
     println!("{sum_of_squares_of_evens}");
 }
     \end{minted}
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Rust Toolchain}
+    Live demo of the structure of Rust projects and the usage of the Rust toolchain. The example is available in the lecture repository in the directory \texttt{example\_project}.
 \end{frame}
 
 \end{document}
