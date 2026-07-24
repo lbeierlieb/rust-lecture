@@ -7446,7 +7446,7 @@ fn main() {
 fn main() {
     "hello".chars().for_each(|c| print!("{c} "));
 
-    let x = Some(3).unwrap_or_(10);
+    let x = Some(3).unwrap_or(10);
     let x = Some(3).unwrap_or_else(|| {
         // expensive operation to calculate default value
         10
