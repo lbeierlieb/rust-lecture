@@ -7090,8 +7090,8 @@ variables
 \begin{frame}[fragile]
     \frametitle{Traits}
     \begin{minted}[linenos]{rust}
-let prefix = "number:";
-let closure = |num| println!("{} {num}");
+let prefix = 3;
+let closure = |num| println!("{prefix} {num}");
     \end{minted}
     \vfill
     is treated by the compiler similar to:
@@ -7107,7 +7107,7 @@ impl<'a> Closure {
     }
 }
 fn main() {
-    let prefix = "number:";
+    let prefix = 3;
     let closure = Closure { prefix: &prefix };
 }
     \end{minted}
