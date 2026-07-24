@@ -7473,7 +7473,49 @@ fn main() {
 \begin{frame}[fragile]
     \frametitle{Traits}
     \begin{minted}[linenos]{rust}
-<insert map live coding result>
+struct MapIter<I, F, R>
+where
+    I: Iterator,
+    F: FnMut(I::Item) -> R,
+{
+    iter: I,
+    f: F,
+}
+    \end{minted}
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Traits}
+    \begin{minted}[linenos,fontsize=\small]{rust}
+impl<I, F, R> Iterator for MapIter<I, F, R>
+where
+    I: Iterator,
+    F: FnMut(I::Item) -> R,
+{
+    type Item = R;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        let f = &mut self.f;
+        let item = self.iter.next();
+        match item {
+            Some(item) => Some(f(item)),
+            None => None,
+        }
+    }
+}
+    \end{minted}
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Traits}
+    \begin{minted}[linenos]{rust}
+fn map<I, F, R>(iter: I, f: F) -> MapIter<I, F, R>
+where
+    I: Iterator,
+    F: FnMut(I::Item) -> R,
+{
+    MapIter { iter, f }
+}
     \end{minted}
 \end{frame}
 
