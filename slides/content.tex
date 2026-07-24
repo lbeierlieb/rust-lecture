@@ -6950,7 +6950,7 @@ fn print_something() -> &str {
 fn main() {
     let func: fn() -> &str = print_something;
     let text = func();
-    func("{}", text);
+    println!("{}", text);
 }
     \end{minted}
     \vfill
